@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.18;
 
 import "solidity-rlp/contracts/RLPReader.sol";
 
-contract AllowanceCalldata {
+library AllowanceCalldata {
     function sliceRLPItems(
         RLPReader.RLPItem[] memory arguments,
         uint start

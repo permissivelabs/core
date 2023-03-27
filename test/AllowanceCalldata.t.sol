@@ -1,19 +1,14 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import "../src/core/AllowanceCalldata.sol";
 
 contract AllowanceCalldataTest is Test {
-    AllowanceCalldata public verifier;
     bytes allowanceData =
         hex"f845d60194690b9a9e9aa1c9db991c7721a92d351db4fac990c902872386f26fc0ffffcc04cac903872386f26fc0ffffd60194690b9a9e9aa1c9db991c7721a92d351db4fac990";
     bytes callData =
         hex"f794690b9a9e9aa1c9db991c7721a92d351db4fac990872386f26fc10000842386f26f94690b9a9e9aa1c9db991c7721a92d351db4fac990";
-
-    function setUp() public {
-        verifier = new AllowanceCalldata();
-    }
 
     function hasNoZeroPrefix(bytes calldata data) internal pure returns (bool) {
         RLPReader.RLPItem memory RLPAllowed = RLPReader.toRlpItem(data);
@@ -34,17 +29,17 @@ contract AllowanceCalldataTest is Test {
     function testShouldFailBecauseUnauthorizedData(bytes calldata data) public {
         vm.assume(keccak256(data) != keccak256(callData));
         vm.expectRevert();
-        verifier.isAllowedCalldata(allowanceData, data);
+        AllowanceCalldata.isAllowedCalldata(allowanceData, data);
     }
 
     function testShouldFailBecauseUnauthorizedAllowanceData(
         bytes calldata data
     ) public {
         vm.expectRevert();
-        verifier.isAllowedCalldata(data, callData);
+        AllowanceCalldata.isAllowedCalldata(data, callData);
     }
 
     function testValidCall() public view {
-        verifier.isAllowedCalldata(allowanceData, callData);
+        AllowanceCalldata.isAllowedCalldata(allowanceData, callData);
     }
 }

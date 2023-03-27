@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.18;
 
 import "../interfaces/IPermissiveAccount.sol";
 import "../interfaces/Permission.sol";
@@ -32,7 +32,7 @@ interface IGnosisSafe {
     ) external returns (bool success);
 }
 
-contract PermissiveGnosis is BaseAccount, IPermissiveAccount, Ownable {
+contract PermissiveSafe is BaseAccount, IPermissiveAccount, Ownable {
     using ECDSA for bytes32;
     string public constant NAME = "Permissive Module";
     string public constant VERSION = "0.1.0";
@@ -85,11 +85,7 @@ contract PermissiveGnosis is BaseAccount, IPermissiveAccount, Ownable {
         UserOperation calldata userOp,
         bytes32 userOpHash,
         uint256 missingAccountFunds
-    )
-        external
-        override(BaseAccount, IAccount)
-        returns (uint256 validationData)
-    {
+    ) external returns (uint256 validationData) {
         _requireFromEntryPoint();
         if (userOp.initCode.length == 0) {
             _validateAndUpdateNonce(userOp);
@@ -218,7 +214,7 @@ contract PermissiveGnosis is BaseAccount, IPermissiveAccount, Ownable {
     function _validateSignature(
         UserOperation calldata userOp,
         bytes32 userOpHash
-    ) internal view override returns (uint256 validationData) {
+    ) internal view returns (uint256 validationData) {
         bytes32 hash = userOpHash.toEthSignedMessageHash();
         if (owner() != hash.recover(userOp.signature))
             return SIG_VALIDATION_FAILED;
@@ -243,4 +239,10 @@ contract PermissiveGnosis is BaseAccount, IPermissiveAccount, Ownable {
 
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
+
+    function _validateSignature(
+        UserOperation calldata userOp,
+        bytes32 userOpHash,
+        address aggregator
+    ) internal virtual override returns (uint256 deadline) {}
 }

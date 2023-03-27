@@ -1,0 +1,50 @@
+{
+  "name": "@permissivelabs/experiments",
+  "version": "0.0.1",
+  "description": "The code to test the ideation and infrastructure mentionned in the whitepaper",
+  "main": "index.js",
+  "scripts": {
+    "test": "forge test && npx hardhat test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/permissivelabs/experiments.git"
+  },
+  "author": "Flydexo",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/permissivelabs/experiments/issues"
+  },
+  "homepage": "https://github.com/permissivelabs/experiments#readme",
+  "devDependencies": {
+    "@account-abstraction/contracts": "^0.5.0",
+    "@ethersproject/providers": "^5.4.7",
+    "@nomicfoundation/hardhat-chai-matchers": "^1.0.0",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
+    "@nomiclabs/hardhat-ethers": "^2.0.0",
+    "@nomiclabs/hardhat-etherscan": "^3.0.0",
+    "@openzeppelin/contracts": "^4.8.2",
+    "@typechain/ethers-v5": "^10.1.0",
+    "@typechain/hardhat": "^6.1.2",
+    "@types/chai": "^4.2.0",
+    "@types/mocha": ">=9.1.0",
+    "chai": "^4.3.7",
+    "dotenv": "^16.0.3",
+    "ethers": "^5.7.2",
+    "hardhat": "^2.13.0",
+    "hardhat-gas-reporter": "^1.0.8",
+    "hardhat-preprocessor": "^0.1.5",
+    "mocha": "^10.2.0",
+    "solidity-coverage": "^0.8.1",
+    "ts-node": "^10.9.1",
+    "tsc": "^2.0.4",
+    "typechain": "^8.1.0",
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "@account-abstraction/sdk": "^0.5.0",
+    "merkletreejs": "^0.3.9",
+    "zod": "^3.21.4"
+  }
+}

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.18;
 
 import "@account-abstraction/contracts/core/BaseAccount.sol";
 import "../interfaces/IPermissiveAccount.sol";
@@ -9,6 +9,7 @@ import "../interfaces/Permission.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "./AllowanceCalldata.sol";
 
 contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
     using ECDSA for bytes32;
@@ -18,6 +19,10 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
     IEntryPoint private immutable _entryPoint;
     uint96 private _nonce;
     bool private _initialized;
+
+    struct EIP712Struct {
+        bytes32 permissionHash;
+    }
 
     constructor(address __entryPoint) {
         _entryPoint = IEntryPoint(__entryPoint);
@@ -58,6 +63,7 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
     function validateUserOp(
         UserOperation calldata userOp,
         bytes32 userOpHash,
+        address,
         uint256 missingAccountFunds
     )
         external
@@ -142,6 +148,10 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
                 remainingValueForOperator[permission.operator]
             );
         remainingValueForOperator[permission.operator] -= value;
+        AllowanceCalldata.isAllowedCalldata(
+            permission.allowed_arguments,
+            callData
+        );
         if (permission.selector != bytes4(callData))
             revert InvalidSelector(bytes4(callData), permission.selector);
         if (permission.expiresAtUnix != 0 && permission.expiresAtBlock != 0)
@@ -188,7 +198,8 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
 
     function _validateSignature(
         UserOperation calldata userOp,
-        bytes32 userOpHash
+        bytes32 userOpHash,
+        address
     ) internal view override returns (uint256 validationData) {
         bytes32 hash = userOpHash.toEthSignedMessageHash();
         if (owner() != hash.recover(userOp.signature))
@@ -212,6 +223,5 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
         }
     }
 
-    // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 }

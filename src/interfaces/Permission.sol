@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.18;
 
 struct Permission {
     // the operator
@@ -10,7 +10,8 @@ struct Permission {
     // the function selector
     bytes4 selector;
     // specific arguments that are allowed for this permisison (see readme)
-    // bytes allowed_arguments;
+    bytes allowed_arguments;
+    // the paymaster if set will pay the transactions
     address paymaster;
     // the timestamp when the permission isn't valid anymore
     // @dev can be 0 if expires_at_block != 0
