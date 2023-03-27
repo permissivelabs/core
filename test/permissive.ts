@@ -20,10 +20,27 @@ import {
 } from '../typechain-types';
 import { UserOperationStruct } from '@account-abstraction/contracts';
 import { Permission } from './utils/types';
+let libConfig: { libraries: { AllowanceCalldata: string } };
+
+before(async () => {
+	const AllowanceCalldata = await hre.ethers.getContractFactory(
+		'AllowanceCalldata'
+	);
+	const { address } = await AllowanceCalldata.deploy();
+
+	libConfig = {
+		libraries: {
+			AllowanceCalldata: address,
+		},
+	};
+});
 
 describe('setOperatorPermissions', () => {
 	it('should update permission hash, update fee and value and emit event', async () => {
-		const Permissive = await hre.ethers.getContractFactory('PermissiveAccount');
+		const Permissive = await hre.ethers.getContractFactory(
+			'PermissiveAccount',
+			libConfig
+		);
 		const account = await Permissive.deploy(ENTRYPOINT);
 		const [operator, merkleRoot] = [
 			Wallet.createRandom().address,
@@ -61,14 +78,22 @@ describe('validation & execution', () => {
 		const Entrypoint = await hre.ethers.getContractFactory('CustomEntryPoint');
 		entrypoint = await Entrypoint.deploy();
 		Token = await ethers.getContractFactory('Token');
-		Permissive = await hre.ethers.getContractFactory('PermissiveAccount');
+		Permissive = await hre.ethers.getContractFactory(
+			'PermissiveAccount',
+			libConfig
+		);
 	});
 
 	beforeEach(async () => {
 		const signers = await ethers.getSigners();
 		owner = signers[0];
 		operator = signers[1];
-		account = await setupAccount(entrypoint.address, operator.address, owner);
+		account = await setupAccount(
+			entrypoint.address,
+			operator.address,
+			owner,
+			libConfig
+		);
 		operation = generateCorrectOperation(account, operator.address);
 		operation.sender = account.address;
 		const opHash = await entrypoint.getUserOpHash(operation);
@@ -301,7 +326,10 @@ describe('factory', () => {
 	});
 
 	it('should create account', async () => {
-		const Factory = await ethers.getContractFactory('PermissiveFactory');
+		const Factory = await ethers.getContractFactory(
+			'PermissiveFactory',
+			libConfig
+		);
 		const factory = await Factory.deploy(entrypoint.address);
 		const account = new ethers.Contract(
 			await factory.getAddress(
@@ -309,7 +337,7 @@ describe('factory', () => {
 				ethers.BigNumber.from(owner.address)
 			),
 			await (
-				await ethers.getContractFactory('PermissiveAccount')
+				await ethers.getContractFactory('PermissiveAccount', libConfig)
 			).interface
 		);
 		await entrypoint.depositTo(account.address, {

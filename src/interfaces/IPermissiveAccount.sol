@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.18;
 
-import "@account-abstraction/contracts/interfaces/IAccount.sol";
+import "account-abstraction/interfaces/IAccount.sol";
 import "./Permission.sol";
 
 interface IPermissiveAccount is IAccount {

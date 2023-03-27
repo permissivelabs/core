@@ -2219,8 +2219,8 @@
       }
     },
     "src/composability/Safe.sol": {
-      "lastModificationDate": 1679946026244,
-      "contentHash": "7d741af3ccb6331f235a381dfd9569b1",
+      "lastModificationDate": 1679949838674,
+      "contentHash": "7bbafdfde3db134288ea33197f1b45e8",
       "sourceName": "src/composability/Safe.sol",
       "solcConfig": {
         "settings": {
@@ -2344,8 +2344,8 @@
       }
     },
     "src/core/AllowanceCalldata.sol": {
-      "lastModificationDate": 1679948835694,
-      "contentHash": "2a6b227de00cdcc2aa61b883552f2cbf",
+      "lastModificationDate": 1679949916004,
+      "contentHash": "ec7b1c9a6949c33bd90c55a7c28474c3",
       "sourceName": "src/core/AllowanceCalldata.sol",
       "solcConfig": {
         "settings": {
@@ -2386,8 +2386,8 @@
       }
     },
     "src/core/PermissiveAccount.sol": {
-      "lastModificationDate": 1679949461634,
-      "contentHash": "3261b967e8ed0e826c3f0a4d63a38180",
+      "lastModificationDate": 1679949877384,
+      "contentHash": "975f49a9c0848993d1e1369e9decc91a",
       "sourceName": "src/core/PermissiveAccount.sol",
       "solcConfig": {
         "settings": {
@@ -2509,8 +2509,8 @@
       }
     },
     "src/interfaces/IPermissiveAccount.sol": {
-      "lastModificationDate": 1679945958744,
-      "contentHash": "5ad1d4a461ba9b02a9d97a4070b76fa2",
+      "lastModificationDate": 1679949799094,
+      "contentHash": "aa31fa5bce8d20c7d2f45c1de393ed25",
       "sourceName": "src/interfaces/IPermissiveAccount.sol",
       "solcConfig": {
         "settings": {
@@ -2593,8 +2593,8 @@
       }
     },
     "src/tests/CustomEntrypoint.sol": {
-      "lastModificationDate": 1679945958774,
-      "contentHash": "2929fb2d0f1a8cc6bd8685688a8076ba",
+      "lastModificationDate": 1679949792724,
+      "contentHash": "0729bb5ead582c16b709be6b2289eeea",
       "sourceName": "src/tests/CustomEntrypoint.sol",
       "solcConfig": {
         "settings": {
@@ -2644,8 +2644,8 @@
       }
     },
     "src/tests/PermissivePaymaster.sol": {
-      "lastModificationDate": 1679945958774,
-      "contentHash": "99a309ff97f2d24abbf6c7c5252d1e90",
+      "lastModificationDate": 1679949785074,
+      "contentHash": "183193b5a738894679a37464c196201f",
       "sourceName": "src/tests/PermissivePaymaster.sol",
       "solcConfig": {
         "settings": {

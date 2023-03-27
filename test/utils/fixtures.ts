@@ -95,9 +95,13 @@ export const generateCorrectOperation = (
 export const setupAccount = async (
 	ENTRYPOINT: string,
 	operator: string,
-	owner: SignerWithAddress
+	owner: SignerWithAddress,
+	libConfig: any
 ) => {
-	const Permissive = await hre.ethers.getContractFactory('PermissiveAccount');
+	const Permissive = await hre.ethers.getContractFactory(
+		'PermissiveAccount',
+		libConfig
+	);
 	const account = await Permissive.deploy(ENTRYPOINT);
 	const merkleRoot =
 		'0x' + computerPermissionMerkleTree(permissionsSample(operator)).root;

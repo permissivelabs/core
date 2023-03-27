@@ -6,8 +6,8 @@ import "../interfaces/Permission.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import "@account-abstraction/contracts/core/BaseAccount.sol";
-import "@account-abstraction/contracts/interfaces/IEntryPoint.sol";
+import "account-abstraction/core/BaseAccount.sol";
+import "account-abstraction/interfaces/IEntryPoint.sol";
 
 /// @title Enum - Collection of enums
 /// @author Richard Meissner - <richard@gnosis.pm>

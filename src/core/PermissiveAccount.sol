@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.18;
 
-import "@account-abstraction/contracts/core/BaseAccount.sol";
+import "account-abstraction/core/BaseAccount.sol";
 import "../interfaces/IPermissiveAccount.sol";
-import "@account-abstraction/contracts/interfaces/IEntryPoint.sol";
+import "account-abstraction/interfaces/IEntryPoint.sol";
 import "../interfaces/Permission.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";

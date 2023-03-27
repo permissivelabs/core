@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.18;
 
-import "@account-abstraction/contracts/samples/TokenPaymaster.sol";
+import "account-abstraction/samples/TokenPaymaster.sol";
 
 contract PermissivePaymaster is TokenPaymaster {
     constructor(
