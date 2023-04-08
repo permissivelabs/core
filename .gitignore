@@ -5,3 +5,4 @@ typechain-types
 cache
 cache_hardhat
 artifacts
+.env
