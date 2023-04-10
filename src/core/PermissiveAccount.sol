@@ -13,12 +13,15 @@ import "./AllowanceCalldata.sol";
 
 contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
     using ECDSA for bytes32;
+
     mapping(address => uint256) public remainingFeeForOperator;
     mapping(address => uint256) public remainingValueForOperator;
     mapping(address => bytes32) public operatorPermissions;
     IEntryPoint private immutable _entryPoint;
     uint96 private _nonce;
     bool private _initialized;
+
+    uint256 private _feePercentage = 20;
 
     struct EIP712Struct {
         bytes32 permissionHash;
@@ -107,6 +110,7 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
         // stores the proof, only used in validateUserOp
         bytes32[] calldata
     ) external {
+        uint256 gasStart = gasleft();
         _requireFromEntryPointOrOwner();
         if (msg.sender != owner()) {
             if (permission.expiresAtUnix != 0) {
@@ -127,6 +131,20 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
         if (!success) {
             assembly {
                 revert(add(result, 32), mload(result))
+            }
+        }
+        if (msg.sender == permission.operator) {
+            // Add the following lines to charge the fee in native tokens
+            uint256 gasSpent = gasStart - gasleft();
+            uint256 feeAmount = (gasSpent * tx.gasprice * _feePercentage) / 100;
+            // Check if the feeAmount is less than or equal to the msg.value
+            require(msg.value >= feeAmount, "Not enough ETH for fee");
+
+            // Transfer the fee to the contract's address
+            payable(address(this)).transfer(feeAmount);
+            // Return any excess ETH sent
+            if (msg.value > feeAmount) {
+                payable(msg.sender).transfer(msg.value - feeAmount);
             }
         }
     }
