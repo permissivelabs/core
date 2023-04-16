@@ -1,8 +1,4 @@
 out
 cache
-node_modules
-typechain-types
-cache
-cache_hardhat
 artifacts
 .env
