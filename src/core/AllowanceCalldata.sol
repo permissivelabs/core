@@ -3,6 +3,14 @@ pragma solidity ^0.8.18;
 
 import "Solidity-RLP/RLPReader.sol";
 
+uint constant ANY = 0;
+uint constant NE = 1;
+uint constant EQ = 2;
+uint constant GT = 3;
+uint constant LT = 4;
+uint constant AND = 5;
+uint constant OR = 6;
+
 library AllowanceCalldata {
     function sliceRLPItems(
         RLPReader.RLPItem[] memory arguments,
@@ -17,8 +25,9 @@ library AllowanceCalldata {
 
     function validateArguments(
         RLPReader.RLPItem[] memory allowedArguments,
-        RLPReader.RLPItem[] memory arguments
-    ) internal pure {
+        RLPReader.RLPItem[] memory arguments,
+        bool isOr
+    ) internal view returns (bool canPass) {
         if (allowedArguments.length == 0) revert();
         for (uint i = 0; i < allowedArguments.length; i++) {
             RLPReader.RLPItem[] memory prefixAndArg = RLPReader.toList(
@@ -26,36 +35,60 @@ library AllowanceCalldata {
             );
             uint prefix = RLPReader.toUint(prefixAndArg[0]);
 
-            if (prefix == 0) {} else if (prefix == 1) {
+            if (prefix == ANY) {} else if (prefix == EQ) {
                 bytes memory allowedArgument = RLPReader.toBytes(
                     prefixAndArg[1]
                 );
                 bytes memory argument = RLPReader.toBytes(arguments[i]);
-                assert(keccak256(allowedArgument) == keccak256(argument));
-            } else if (prefix == 2) {
+                canPass = keccak256(allowedArgument) == keccak256(argument);
+            } else if (prefix == LT) {
                 uint allowedArgument = RLPReader.toUint(prefixAndArg[1]);
                 uint argument = RLPReader.toUint(arguments[i]);
-                assert(allowedArgument < argument);
-            } else if (prefix == 3) {
+                canPass = argument < allowedArgument;
+            } else if (prefix == GT) {
                 uint allowedArgument = RLPReader.toUint(prefixAndArg[1]);
                 uint argument = RLPReader.toUint(arguments[i]);
-                assert(allowedArgument > argument);
-            } else if (prefix == 4) {
+                canPass = argument > allowedArgument;
+            } else if (prefix == OR) {
                 RLPReader.RLPItem[] memory subAllowance = RLPReader.toList(
                     prefixAndArg[1]
                 );
-                validateArguments(subAllowance, sliceRLPItems(arguments, i));
+                canPass = validateArguments(
+                    subAllowance,
+                    sliceRLPItems(arguments, i),
+                    true
+                );
+                i++;
+            } else if (prefix == NE) {
+                bytes memory allowedArgument = RLPReader.toBytes(
+                    prefixAndArg[1]
+                );
+                bytes memory argument = RLPReader.toBytes(arguments[i]);
+                canPass = keccak256(allowedArgument) != keccak256(argument);
+            } else if (prefix == AND) {
+                RLPReader.RLPItem[] memory subAllowance = RLPReader.toList(
+                    prefixAndArg[1]
+                );
+                canPass = validateArguments(
+                    subAllowance,
+                    sliceRLPItems(arguments, i),
+                    false
+                );
                 i++;
             } else {
                 revert();
             }
+
+            if (!isOr && !canPass) break;
+            if (canPass && isOr) break;
         }
+        return canPass;
     }
 
     function isAllowedCalldata(
         bytes calldata allowed,
         bytes calldata data
-    ) external pure returns (bool) {
+    ) external view returns (bool isOk) {
         RLPReader.RLPItem memory RLPAllowed = RLPReader.toRlpItem(allowed);
         RLPReader.RLPItem[] memory allowedArguments = RLPReader.toList(
             RLPAllowed
@@ -63,7 +96,19 @@ library AllowanceCalldata {
         RLPReader.RLPItem memory RLPData = RLPReader.toRlpItem(data);
         RLPReader.RLPItem[] memory arguments = RLPReader.toList(RLPData);
         if (allowedArguments.length != arguments.length) revert();
-        validateArguments(allowedArguments, arguments);
-        return true;
+        isOk = validateArguments(allowedArguments, arguments, false);
+    }
+
+    function RLPtoABI(
+        bytes calldata data
+    ) external pure returns (bytes memory abiEncoded) {
+        RLPReader.RLPItem memory RLPData = RLPReader.toRlpItem(data);
+        RLPReader.RLPItem[] memory arguments = RLPReader.toList(RLPData);
+        for (uint256 i = 0; i < arguments.length; i++) {
+            abiEncoded = bytes.concat(
+                abiEncoded,
+                RLPReader.toBytes(arguments[i])
+            );
+        }
     }
 }

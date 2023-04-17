@@ -10,3 +10,7 @@
 	path = lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
 	branch = v4.8.2
+[submodule "lib/solidity-bytes-utils"]
+	path = lib/solidity-bytes-utils
+	url = https://github.com/GNSPS/solidity-bytes-utils
+	branch = v0.8.0

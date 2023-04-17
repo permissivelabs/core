@@ -20,6 +20,7 @@ contract PermissiveAccountTest is Test {
     uint internal ownerPrivateKey =
         0x18104766cc86e7fb8a7452ac9fb2bccc465a88a9bba2d2d67a5ffd3f459f820f;
     bytes32[] internal proofs;
+    uint[] internal numbers;
 
     function setUp() public {
         entrypoint = new EntryPoint();
@@ -34,7 +35,7 @@ contract PermissiveAccountTest is Test {
             operator,
             address(token),
             token.transfer.selector,
-            hex"e3d60194690b9a9e9aa1c9db991c7721a92d351db4fac990cb0389056bc75e2d63100000",
+            hex"f846e202a0000000000000000000000000690b9a9e9aa1c9db991c7721a92d351db4fac990e204a00000000000000000000000000000000000000000000000056bc75e2d63100000",
             address(0),
             10000000000000000,
             0
@@ -84,10 +85,9 @@ contract PermissiveAccountTest is Test {
                 account.execute.selector,
                 address(token),
                 0,
-                abi.encodeWithSelector(
+                abi.encodePacked(
                     token.transfer.selector,
-                    receiver,
-                    50 ether
+                    hex"f842a0000000000000000000000000690b9a9e9aa1c9db991c7721a92d351db4fac990a00000000000000000000000000000000000000000000000056bc75e2d630fffff"
                 ),
                 permissions[0],
                 proofs
@@ -109,7 +109,14 @@ contract PermissiveAccountTest is Test {
         entrypoint.handleOps(ops, payable(address(this)));
     }
 
-    receive() external payable {
-        console.log("Received refund", msg.value);
+    function testABI() public {
+        numbers.push(1);
+        numbers.push(2);
+        numbers.push(3);
+        numbers.push(4);
+        console.logBytes(abi.encode([1, 2, 3, 4]));
+        console.logBytes(abi.encode(numbers, 15));
     }
+
+    receive() external payable {}
 }

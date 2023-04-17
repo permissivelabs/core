@@ -6,9 +6,9 @@ import "../src/core/AllowanceCalldata.sol";
 
 contract AllowanceCalldataTest is Test {
     bytes allowanceData =
-        hex"f845d60194690b9a9e9aa1c9db991c7721a92d351db4fac990c902872386f26fc0ffffcc04cac903872386f26fc0ffffd60194690b9a9e9aa1c9db991c7721a92d351db4fac990";
+        hex"f8b9f86c06f869e202a0000000000000000000000000429952c8d27f515011d623dfc9038152af52c5a8e202a0000000000000000000000000c1b634853cb333d3ad8663715b08f41a3aec47cce202a00000000000000000000000006887246668a3b87f54deb3b94ba47a6f63f32985f84905f846e203a00000000000000000000000000000000000000000000000008ac7230489e80000e204a0000000000000000000000000000000000000000000000002b5e3af16b1880000";
     bytes callData =
-        hex"f794690b9a9e9aa1c9db991c7721a92d351db4fac990872386f26fc10000842386f26f94690b9a9e9aa1c9db991c7721a92d351db4fac990";
+        hex"f842a0000000000000000000000000429952c8d27f515011d623dfc9038152af52c5a8a00000000000000000000000000000000000000000000000056bc75e2d63100000";
 
     function hasNoZeroPrefix(bytes calldata data) internal pure returns (bool) {
         RLPReader.RLPItem memory RLPAllowed = RLPReader.toRlpItem(data);
@@ -40,6 +40,8 @@ contract AllowanceCalldataTest is Test {
     }
 
     function testValidCall() public view {
-        AllowanceCalldata.isAllowedCalldata(allowanceData, callData);
+        assert(
+            AllowanceCalldata.isAllowedCalldata(allowanceData, callData) == true
+        );
     }
 }

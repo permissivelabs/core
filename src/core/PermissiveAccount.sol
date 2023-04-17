@@ -10,10 +10,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "./AllowanceCalldata.sol";
-import "forge-std/console.sol";
+import "bytes/BytesLib.sol";
 
 contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
     using ECDSA for bytes32;
+    using BytesLib for bytes;
     mapping(address => uint256) public remainingFeeForOperator;
     mapping(address => uint256) public remainingValueForOperator;
     mapping(address => bytes32) public operatorPermissions;
@@ -124,7 +125,12 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
                     );
             }
         }
-        (bool success, bytes memory result) = dest.call{value: value}(func);
+        (bool success, bytes memory result) = dest.call{value: value}(
+            bytes.concat(
+                func.slice(0, 4),
+                AllowanceCalldata.RLPtoABI(func.slice(4, func.length - 4))
+            )
+        );
         if (!success) {
             assembly {
                 revert(add(result, 32), mload(result))
@@ -142,8 +148,6 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
             userOp.callData[4:],
             (address, uint256, bytes, Permission, bytes32[])
         );
-        console.log(to, value);
-        console.logBytes(callData);
         if (permission.to != to) revert InvalidTo(to, permission.to);
         if (remainingValueForOperator[permission.operator] < value)
             revert ExceededValue(
@@ -151,9 +155,11 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
                 remainingValueForOperator[permission.operator]
             );
         remainingValueForOperator[permission.operator] -= value;
-        AllowanceCalldata.isAllowedCalldata(
-            permission.allowed_arguments,
-            callData
+        assert(
+            AllowanceCalldata.isAllowedCalldata(
+                permission.allowed_arguments,
+                callData.slice(4, callData.length - 4)
+            ) == true
         );
         if (permission.selector != bytes4(callData))
             revert InvalidSelector(bytes4(callData), permission.selector);
