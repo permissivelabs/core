@@ -19,4 +19,6 @@ struct Permission {
     // the block when the permission isn't valid anymore
     // @dev can be 0 if expires_at_unix != 0
     uint256 expiresAtBlock;
+    // the max number of times + 1 this permision can be used, 0 = infinite
+    uint256 maxUsage;
 }

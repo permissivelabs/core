@@ -3,6 +3,7 @@
 pragma solidity ^0.8.18;
 
 import "account-abstraction/core/BaseAccount.sol";
+import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import "../interfaces/IPermissiveAccount.sol";
 import "account-abstraction/interfaces/IEntryPoint.sol";
 import "../interfaces/Permission.sol";
@@ -12,21 +13,27 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "./AllowanceCalldata.sol";
 import "bytes/BytesLib.sol";
 
-contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
+// keccak256("OperatorPermissions(address operator,bytes32 merkleRootPermissions,uint256 maxValue,uint256 maxFee,address[] sigValidForVerifiers)")
+bytes32 constant typedStruct = 0xcd3966ea44fb027b668c722656f7791caa71de9073b3cbb77585cc6fa97ce82e;
+
+contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
     using ECDSA for bytes32;
     using BytesLib for bytes;
     mapping(address => uint256) public remainingFeeForOperator;
     mapping(address => uint256) public remainingValueForOperator;
     mapping(address => bytes32) public operatorPermissions;
+    mapping(bytes32 => uint256) public remainingPermUsage;
     IEntryPoint private immutable _entryPoint;
     uint96 private _nonce;
     bool private _initialized;
 
-    struct EIP712Struct {
-        bytes32 permissionHash;
+    function _hashTypedDataV4(
+        bytes32 structHash
+    ) internal view override returns (bytes32) {
+        return ECDSA.toTypedDataHash(_domainSeparatorV4(), structHash);
     }
 
-    constructor(address __entryPoint) {
+    constructor(address __entryPoint) EIP712("Permissive Account", "0.0.3") {
         _entryPoint = IEntryPoint(__entryPoint);
     }
 
@@ -52,14 +59,33 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
         address operator,
         bytes32 merkleRootPermissions,
         uint256 maxValue,
-        uint256 maxFee
+        uint256 maxFee,
+        bytes calldata signature
     ) external {
-        _requireFromEntryPointOrOwner();
+        bytes32 digest = _hashTypedDataV4(
+            keccak256(
+                abi.encode(
+                    typedStruct,
+                    operator,
+                    merkleRootPermissions,
+                    maxValue,
+                    maxFee
+                )
+            )
+        );
+        address signer = ECDSA.recover(digest, signature);
+        if (signer != owner()) revert NotAllowed(signer);
         bytes32 oldValue = operatorPermissions[operator];
         operatorPermissions[operator] = merkleRootPermissions;
         remainingFeeForOperator[operator] = maxFee;
         remainingValueForOperator[operator] = maxValue;
-        emit OperatorMutated(operator, oldValue, merkleRootPermissions);
+        emit OperatorMutated(
+            operator,
+            oldValue,
+            merkleRootPermissions,
+            maxValue,
+            maxFee
+        );
     }
 
     function validateUserOp(
@@ -85,8 +111,9 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
                 );
             if (permission.operator != hash.recover(userOp.signature))
                 validationData = SIG_VALIDATION_FAILED;
-            _validateMerklePermission(permission, proof);
-            _validatePermission(userOp, permission);
+            bytes32 permHash = hashPerm(permission);
+            _validateMerklePermission(permission, proof, permHash);
+            _validatePermission(userOp, permission, permHash);
             if (
                 missingAccountFunds >
                 remainingFeeForOperator[permission.operator]
@@ -140,9 +167,27 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
 
     /* INTERNAL */
 
+    function hashPerm(
+        Permission memory permission
+    ) internal pure returns (bytes32 permHash) {
+        permHash = keccak256(
+            abi.encode(
+                permission.operator,
+                permission.to,
+                permission.selector,
+                permission.allowed_arguments,
+                permission.paymaster,
+                permission.expiresAtUnix,
+                permission.expiresAtBlock,
+                permission.maxUsage
+            )
+        );
+    }
+
     function _validatePermission(
         UserOperation calldata userOp,
-        Permission memory permission
+        Permission memory permission,
+        bytes32 permHash
     ) internal {
         (address to, uint256 value, bytes memory callData, , ) = abi.decode(
             userOp.callData[4:],
@@ -155,6 +200,14 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
                 remainingValueForOperator[permission.operator]
             );
         remainingValueForOperator[permission.operator] -= value;
+        if (permission.maxUsage > 1) {
+            if (remainingPermUsage[hashPerm(permission)] == 1)
+                revert OutOfPerms(permHash);
+            if (remainingPermUsage[permHash] == 0) {
+                remainingPermUsage[permHash] = permission.maxUsage;
+            }
+            remainingPermUsage[permHash]--;
+        }
         assert(
             AllowanceCalldata.isAllowedCalldata(
                 permission.allowed_arguments,
@@ -178,18 +231,9 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
 
     function _validateMerklePermission(
         Permission memory permission,
-        bytes32[] memory proof
+        bytes32[] memory proof,
+        bytes32 permHash
     ) public view {
-        bytes32 permHash = keccak256(
-            abi.encode(
-                permission.operator,
-                permission.to,
-                permission.selector,
-                permission.paymaster,
-                permission.expiresAtUnix,
-                permission.expiresAtBlock
-            )
-        );
         bool isValidProof = MerkleProof.verify(
             proof,
             operatorPermissions[permission.operator],

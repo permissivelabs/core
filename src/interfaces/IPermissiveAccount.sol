@@ -10,6 +10,7 @@ interface IPermissiveAccount is IAccount {
     error NotAllowed(address);
     error InvalidTo(address provided, address expected);
     error ExceededValue(uint256 value, uint256 max);
+    error OutOfPerms(bytes32 perm);
     error ExceededFees(uint256 fee, uint256 maxFee);
     error InvalidPermission();
     error InvalidPaymaster(address provided, address expected);
@@ -19,7 +20,9 @@ interface IPermissiveAccount is IAccount {
     event OperatorMutated(
         address operator,
         bytes32 oldPermissions,
-        bytes32 newPermissions
+        bytes32 newPermissions,
+        uint256 maxValue,
+        uint256 maxFee
     );
 
     function initialize(address owner) external;
@@ -28,6 +31,7 @@ interface IPermissiveAccount is IAccount {
         address operator,
         bytes32 merkleRootPermissions,
         uint256 maxValue,
-        uint256 maxFee
+        uint256 maxFee,
+        bytes calldata signature
     ) external;
 }
