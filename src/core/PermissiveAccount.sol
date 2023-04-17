@@ -12,8 +12,9 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "./AllowanceCalldata.sol";
 import "bytes/BytesLib.sol";
+import "./FeeManager.sol";
 
-// keccak256("OperatorPermissions(address operator,bytes32 merkleRootPermissions,uint256 maxValue,uint256 maxFee,address[] sigValidForVerifiers)")
+// keccak256("OperatorPermissions(address operator,bytes32 merkleRootPermissions,uint256 maxValue,uint256 maxFee)")
 bytes32 constant typedStruct = 0xcd3966ea44fb027b668c722656f7791caa71de9073b3cbb77585cc6fa97ce82e;
 
 contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
@@ -24,6 +25,7 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
     mapping(address => bytes32) public operatorPermissions;
     mapping(bytes32 => uint256) public remainingPermUsage;
     IEntryPoint private immutable _entryPoint;
+    FeeManager private immutable feeManager;
     uint96 private _nonce;
     bool private _initialized;
 
@@ -33,8 +35,12 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
         return ECDSA.toTypedDataHash(_domainSeparatorV4(), structHash);
     }
 
-    constructor(address __entryPoint) EIP712("Permissive Account", "0.0.3") {
+    constructor(
+        address __entryPoint,
+        address payable _feeManager
+    ) EIP712("Permissive Account", "0.0.3") {
         _entryPoint = IEntryPoint(__entryPoint);
+        feeManager = FeeManager(_feeManager);
     }
 
     /* GETTERS */
@@ -124,6 +130,9 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
                 );
             }
             remainingFeeForOperator[permission.operator] -= missingAccountFunds;
+            payable(address(feeManager)).transfer(
+                (feeManager.fee() * missingAccountFunds) / 10000
+            );
         }
         _payPrefund(missingAccountFunds);
     }
