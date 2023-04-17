@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "./AllowanceCalldata.sol";
+import "forge-std/console.sol";
 
 contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
     using ECDSA for bytes32;
@@ -141,6 +142,8 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable {
             userOp.callData[4:],
             (address, uint256, bytes, Permission, bytes32[])
         );
+        console.log(to, value);
+        console.logBytes(callData);
         if (permission.to != to) revert InvalidTo(to, permission.to);
         if (remainingValueForOperator[permission.operator] < value)
             revert ExceededValue(
