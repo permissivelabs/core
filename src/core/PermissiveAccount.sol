@@ -285,5 +285,54 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
         }
     }
 
+    function recoverSigner(
+        bytes32 _hash,
+        bytes memory _signature
+    ) internal pure returns (address signer) {
+        require(
+            _signature.length == 65,
+            "SignatureValidator#recoverSigner: invalid signature length"
+        );
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        assembly {
+            r := mload(add(_signature, 32))
+            s := mload(add(_signature, 64))
+            v := and(mload(add(_signature, 65)), 255)
+        }
+        if (
+            uint256(s) >
+            0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0
+        ) {
+            revert(
+                "SignatureValidator#recoverSigner: invalid signature 's' value"
+            );
+        }
+        if (v != 27 && v != 28) {
+            revert(
+                "SignatureValidator#recoverSigner: invalid signature 'v' value"
+            );
+        }
+        signer = ecrecover(_hash, v, r, s);
+        require(
+            signer != address(0x0),
+            "SignatureValidator#recoverSigner: INVALID_SIGNER"
+        );
+
+        return signer;
+    }
+
+    function isValidSignature(
+        bytes32 _hash,
+        bytes calldata _signature
+    ) external view returns (bytes4) {
+        if (recoverSigner(_hash, _signature) == owner()) {
+            return 0x1626ba7e;
+        } else {
+            return 0xffffffff;
+        }
+    }
+
     receive() external payable {}
 }
