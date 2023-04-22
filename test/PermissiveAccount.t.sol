@@ -16,25 +16,55 @@ struct Permit {
     uint256 maxFee;
 }
 
+library DomainSeparatorUtils {
+    function buildDomainSeparator(
+        bytes32 typeHash,
+        bytes32 nameHash,
+        bytes32 versionHash,
+        address target
+    ) public view returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    typeHash,
+                    nameHash,
+                    versionHash,
+                    block.chainid,
+                    target
+                )
+            );
+    }
+
+    function efficientHash(
+        bytes32 a,
+        bytes32 b
+    ) public pure returns (bytes32 value) {
+        /// @solidity memory-safe-assembly
+        assembly {
+            mstore(0x00, a)
+            mstore(0x20, b)
+            value := keccak256(0x00, 0x40)
+        }
+    }
+}
+
 contract SigUtils {
-    bytes32 internal DOMAIN_SEPARATOR;
+    bytes32 public DOMAIN_SEPARATOR;
 
     constructor(bytes32 _DOMAIN_SEPARATOR) {
         DOMAIN_SEPARATOR = _DOMAIN_SEPARATOR;
     }
 
-    // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
-    bytes32 public constant PERMIT_TYPEHASH =
+    bytes32 public constant TYPEHASH =
         0xcd3966ea44fb027b668c722656f7791caa71de9073b3cbb77585cc6fa97ce82e;
 
-    // computes the hash of a permit
     function getStructHash(
         Permit memory _permit
     ) internal pure returns (bytes32) {
         return
             keccak256(
                 abi.encode(
-                    PERMIT_TYPEHASH,
+                    TYPEHASH,
                     _permit.operator,
                     _permit.merkleRootPermissions,
                     _permit.maxValue,
@@ -43,7 +73,6 @@ contract SigUtils {
             );
     }
 
-    // computes the hash of the fully encoded EIP-712 message for the domain, which can be used to recover the signer
     function getTypedDataHash(
         Permit memory _permit
     ) public view returns (bytes32) {
@@ -71,6 +100,7 @@ contract PermissiveAccountTest is Test {
     bytes32[] internal proofs;
     uint[] internal numbers;
     FeeManager internal feeManager;
+    SigUtils internal utils;
 
     function setUp() public {
         entrypoint = new EntryPoint();
@@ -96,45 +126,53 @@ contract PermissiveAccountTest is Test {
             100
         );
         permissions.push(perm);
+        proofs.push(hashPermission(perm));
+        utils = new SigUtils(
+            DomainSeparatorUtils.buildDomainSeparator(
+                keccak256(
+                    "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+                ),
+                keccak256(bytes("Permissive Account")),
+                keccak256(bytes("0.0.3")),
+                address(account)
+            )
+        );
     }
 
     function hashPermission(
         Permission memory permission
-    ) internal pure returns (bytes32 h) {
-        h = keccak256(
+    ) internal pure returns (bytes32 permHash) {
+        permHash = keccak256(
             abi.encode(
                 permission.operator,
                 permission.to,
                 permission.selector,
+                permission.allowed_arguments,
                 permission.paymaster,
                 permission.expiresAtUnix,
-                permission.expiresAtBlock
+                permission.expiresAtBlock,
+                permission.maxUsage
             )
         );
     }
 
     function testPermissionsGranted() public {
+        bytes32 root = DomainSeparatorUtils.efficientHash(proofs[0], proofs[0]);
         vm.prank(owner);
-        SigUtils utils = new SigUtils();
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            0xb7e2c8abccd54967814ebafa49a8ac92191b81d4698ec3089a2f1dde65b71d66,
-            utils.getTypedDataHash(
-                Permit(operator, hashPermission(permissions[0]), 0, 1 ether)
-            )
+        bytes32 digest = utils.getTypedDataHash(
+            Permit(operator, root, 0, 1 ether)
         );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
         account.setOperatorPermissions(
             operator,
-            hashPermission(permissions[0]),
+            root,
             0,
             1 ether,
             abi.encodePacked(r, s, v)
         );
         assert(account.remainingFeeForOperator(operator) == 1 ether);
         assert(account.remainingValueForOperator(operator) == 0);
-        assert(
-            account.operatorPermissions(operator) ==
-                hashPermission(permissions[0])
-        );
+        assert(account.operatorPermissions(operator) == root);
     }
 
     function testTransactionPasses() public {
@@ -170,15 +208,13 @@ contract PermissiveAccountTest is Test {
         op.signature = abi.encodePacked(r, s, v);
         ops.push(op);
         entrypoint.handleOps(ops, payable(address(this)));
-    }
-
-    function testABI() public {
-        numbers.push(1);
-        numbers.push(2);
-        numbers.push(3);
-        numbers.push(4);
-        console.logBytes(abi.encode([1, 2, 3, 4]));
-        console.logBytes(abi.encode(numbers, 15));
+        assert(
+            token.balanceOf(address(account)) == 100 ether - 0x56bc75e2d630fffff
+        );
+        assert(
+            token.balanceOf(0x690B9A9E9aa1C9dB991C7721a92d351Db4FaC990) ==
+                0x56bc75e2d630fffff
+        );
     }
 
     receive() external payable {}
