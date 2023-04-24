@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import "../src/core/PermissiveAccount.sol";
 import "../src/core/FeeManager.sol";
 import "../src/tests/Token.sol";
+import "../src/tests/Incrementer.sol";
 import "../lib/account-abstraction/contracts/core/EntryPoint.sol";
 
 address constant receiver = 0x690B9A9E9aa1C9dB991C7721a92d351Db4FaC990;
@@ -90,13 +91,15 @@ contract SigUtils {
 contract PermissiveAccountTest is Test {
     PermissiveAccount internal account;
     EntryPoint internal entrypoint;
-    address internal operator;
     Token internal token;
     Permission[] internal permissions;
     UserOperation[] internal ops;
     address internal owner = 0xa8b802B27FB4FAD58Ed28Cb6F4Ae5061bD432e8c;
     uint internal ownerPrivateKey =
         0x18104766cc86e7fb8a7452ac9fb2bccc465a88a9bba2d2d67a5ffd3f459f820f;
+    address internal operator = 0xC0F01248E131d0a9eF9C88489cdEbA2101cBCBC1;
+    uint internal operatorPrivateKey =
+        0x3051d2f6a70014d348ece05027d93e3c1937db1d75bb2eacee2e4aed1038a4d6;
     bytes32[] internal proofs;
     uint[] internal numbers;
     FeeManager internal feeManager;
@@ -104,7 +107,6 @@ contract PermissiveAccountTest is Test {
 
     function setUp() public {
         entrypoint = new EntryPoint();
-        operator = 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045;
         feeManager = new FeeManager();
         account = new PermissiveAccount(
             address(entrypoint),
@@ -123,7 +125,7 @@ contract PermissiveAccountTest is Test {
             address(0),
             10000000000000000,
             0,
-            100
+            2
         );
         permissions.push(perm);
         proofs.push(hashPermission(perm));
@@ -202,7 +204,7 @@ contract PermissiveAccountTest is Test {
             hex""
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            ownerPrivateKey,
+            operatorPrivateKey,
             entrypoint.getUserOpHash(op)
         );
         op.signature = abi.encodePacked(r, s, v);
@@ -215,6 +217,66 @@ contract PermissiveAccountTest is Test {
             token.balanceOf(0x690B9A9E9aa1C9dB991C7721a92d351Db4FaC990) ==
                 0x56bc75e2d630fffff
         );
+    }
+
+    function testNoArgs() external {
+        Incrementer incr = new Incrementer();
+        Permission memory perm = Permission(
+            operator,
+            address(incr),
+            incr.increment.selector,
+            hex"c0",
+            address(0),
+            10000000000000000,
+            0,
+            0
+        );
+        permissions.pop();
+        proofs.pop();
+        permissions.push(perm);
+        proofs.push(hashPermission(perm));
+        bytes32 root = DomainSeparatorUtils.efficientHash(proofs[0], proofs[0]);
+        vm.prank(owner);
+        bytes32 digest = utils.getTypedDataHash(
+            Permit(operator, root, 0, 1 ether)
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
+        account.setOperatorPermissions(
+            operator,
+            root,
+            0,
+            1 ether,
+            abi.encodePacked(r, s, v)
+        );
+        vm.prank(address(this));
+        UserOperation memory op = UserOperation(
+            address(account),
+            1,
+            hex"",
+            abi.encodeWithSelector(
+                account.execute.selector,
+                address(incr),
+                0,
+                abi.encodePacked(incr.increment.selector, hex"c0"),
+                permissions[0],
+                proofs
+            ),
+            10000000,
+            10000000,
+            10000,
+            10000,
+            10000,
+            hex"",
+            hex""
+        );
+        (uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(
+            operatorPrivateKey,
+            entrypoint.getUserOpHash(op)
+        );
+        op.signature = abi.encodePacked(r2, s2, v2);
+        ops.push(op);
+        entrypoint.handleOps(ops, payable(address(this)));
+        assert(incr.value() == 1);
     }
 
     receive() external payable {}

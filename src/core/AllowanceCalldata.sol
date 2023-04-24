@@ -28,7 +28,7 @@ library AllowanceCalldata {
         RLPReader.RLPItem[] memory arguments,
         bool isOr
     ) internal view returns (bool canPass) {
-        if (allowedArguments.length == 0) revert();
+        if (allowedArguments.length == 0) return true;
         for (uint i = 0; i < allowedArguments.length; i++) {
             RLPReader.RLPItem[] memory prefixAndArg = RLPReader.toList(
                 allowedArguments[i]

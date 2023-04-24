@@ -11,8 +11,8 @@ import "./FeeManager.sol";
 contract PermissiveFactory {
     PermissiveAccount public immutable accountImplementation;
 
-    constructor(IEntryPoint _entryPoint, FeeManager feeManager) {
-        accountImplementation = new PermissiveAccount(
+    constructor(IEntryPoint _entryPoint, FeeManager feeManager, bytes32 salt) {
+        accountImplementation = new PermissiveAccount{salt: salt}(
             address(_entryPoint),
             payable(address(feeManager))
         );

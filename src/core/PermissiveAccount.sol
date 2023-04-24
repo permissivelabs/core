@@ -209,7 +209,8 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
                 remainingValueForOperator[permission.operator]
             );
         remainingValueForOperator[permission.operator] -= value;
-        if (permission.maxUsage > 1) {
+        if (permission.maxUsage > 0) {
+            if (permission.maxUsage == 1) revert OutOfPerms(permHash);
             if (remainingPermUsage[hashPerm(permission)] == 1)
                 revert OutOfPerms(permHash);
             if (remainingPermUsage[permHash] == 0) {
