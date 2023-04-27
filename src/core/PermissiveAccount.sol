@@ -26,14 +26,7 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
     mapping(bytes32 => uint256) public remainingPermUsage;
     IEntryPoint private immutable _entryPoint;
     FeeManager private immutable feeManager;
-    uint96 private _nonce;
     bool private _initialized;
-
-    function _hashTypedDataV4(
-        bytes32 structHash
-    ) internal view override returns (bytes32) {
-        return ECDSA.toTypedDataHash(_domainSeparatorV4(), structHash);
-    }
 
     constructor(
         address __entryPoint,
@@ -44,10 +37,6 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
     }
 
     /* GETTERS */
-
-    function nonce() public view override returns (uint256) {
-        return _nonce;
-    }
 
     function entryPoint() public view override returns (IEntryPoint) {
         return _entryPoint;
@@ -97,7 +86,6 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
     function validateUserOp(
         UserOperation calldata userOp,
         bytes32 userOpHash,
-        address,
         uint256 missingAccountFunds
     )
         external
@@ -105,34 +93,31 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
         returns (uint256 validationData)
     {
         _requireFromEntryPoint();
-        if (userOp.initCode.length == 0) {
-            _validateAndUpdateNonce(userOp);
-        }
         bytes32 hash = userOpHash.toEthSignedMessageHash();
         if (owner() != hash.recover(userOp.signature)) {
-            (, , , Permission memory permission, bytes32[] memory proof) = abi
-                .decode(
+            (
+                ,
+                ,
+                ,
+                Permission memory permission,
+                bytes32[] memory proof,
+                uint256 providedFee
+            ) = abi.decode(
                     userOp.callData[4:],
-                    (address, uint256, bytes, Permission, bytes32[])
+                    (address, uint256, bytes, Permission, bytes32[], uint256)
                 );
-            if (permission.operator != hash.recover(userOp.signature))
+            if (permission.operator != hash.recover(userOp.signature)) {
                 validationData = SIG_VALIDATION_FAILED;
+            }
             bytes32 permHash = hashPerm(permission);
             _validateMerklePermission(permission, proof, permHash);
             _validatePermission(userOp, permission, permHash);
-            if (
-                missingAccountFunds >
-                remainingFeeForOperator[permission.operator]
-            ) {
-                revert ExceededFees(
-                    missingAccountFunds,
-                    remainingFeeForOperator[permission.operator]
-                );
+            uint gasFee = computeGasFee(userOp);
+            if (providedFee != gasFee) revert("Invalid provided fee");
+            if (gasFee > remainingFeeForOperator[permission.operator]) {
+                revert("Exceeded Fees");
             }
-            remainingFeeForOperator[permission.operator] -= missingAccountFunds;
-            payable(address(feeManager)).transfer(
-                (feeManager.fee() * missingAccountFunds) / 10000
-            );
+            remainingFeeForOperator[permission.operator] -= gasFee;
         }
         _payPrefund(missingAccountFunds);
     }
@@ -143,7 +128,8 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
         bytes memory func,
         Permission calldata permission,
         // stores the proof, only used in validateUserOp
-        bytes32[] calldata
+        bytes32[] calldata,
+        uint256 gasFee
     ) external {
         _requireFromEntryPointOrOwner();
         if (msg.sender != owner()) {
@@ -161,6 +147,9 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
                     );
             }
         }
+        payable(address(feeManager)).transfer(
+            (gasFee * feeManager.fee()) / 10000
+        );
         (bool success, bytes memory result) = dest.call{value: value}(
             bytes.concat(
                 func.slice(0, 4),
@@ -174,7 +163,30 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
         }
     }
 
+    function computeGasFee(
+        UserOperation memory userOp
+    ) public pure returns (uint256 fee) {
+        unchecked {
+            uint256 mul = address(bytes20(userOp.paymasterAndData)) !=
+                address(0)
+                ? 3
+                : 1;
+            uint256 requiredGas = userOp.callGasLimit +
+                userOp.verificationGasLimit *
+                mul +
+                userOp.preVerificationGas;
+
+            fee = requiredGas * userOp.maxFeePerGas;
+        }
+    }
+
     /* INTERNAL */
+
+    function _hashTypedDataV4(
+        bytes32 structHash
+    ) internal view override returns (bytes32) {
+        return ECDSA.toTypedDataHash(_domainSeparatorV4(), structHash);
+    }
 
     function hashPerm(
         Permission memory permission
@@ -202,40 +214,36 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
             userOp.callData[4:],
             (address, uint256, bytes, Permission, bytes32[])
         );
-        if (permission.to != to) revert InvalidTo(to, permission.to);
+        if (permission.to != to) revert("InvalidTo");
         if (remainingValueForOperator[permission.operator] < value)
-            revert ExceededValue(
-                value,
-                remainingValueForOperator[permission.operator]
-            );
+            revert("ExceededValue");
         remainingValueForOperator[permission.operator] -= value;
         if (permission.maxUsage > 0) {
-            if (permission.maxUsage == 1) revert OutOfPerms(permHash);
+            if (permission.maxUsage == 1) revert("OutOfPerms");
             if (remainingPermUsage[hashPerm(permission)] == 1)
-                revert OutOfPerms(permHash);
+                revert("OutOfPerms2");
             if (remainingPermUsage[permHash] == 0) {
                 remainingPermUsage[permHash] = permission.maxUsage;
             }
             remainingPermUsage[permHash]--;
         }
-        assert(
+        require(
             AllowanceCalldata.isAllowedCalldata(
                 permission.allowed_arguments,
                 callData.slice(4, callData.length - 4)
-            ) == true
+            ) == true,
+            "Not allowed Calldata"
         );
-        if (permission.selector != bytes4(callData))
-            revert InvalidSelector(bytes4(callData), permission.selector);
+        if (permission.selector != bytes4(callData)) revert("InvalidSelector");
         if (permission.expiresAtUnix != 0 && permission.expiresAtBlock != 0)
-            revert InvalidPermission();
+            revert("InvalidPermission");
         if (permission.paymaster != address(0)) {
             address paymaster = address(0);
             assembly {
                 let paymasterOffset := calldataload(add(userOp, 288))
                 paymaster := calldataload(add(paymasterOffset, add(userOp, 20)))
             }
-            if (paymaster != permission.paymaster)
-                revert InvalidPaymaster(paymaster, permission.paymaster);
+            if (paymaster != permission.paymaster) revert("InvalidPaymaster");
         }
     }
 
@@ -247,9 +255,9 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
         bool isValidProof = MerkleProof.verify(
             proof,
             operatorPermissions[permission.operator],
-            permHash
+            keccak256(bytes.concat(permHash))
         );
-        if (!isValidProof) revert InvalidProof();
+        if (!isValidProof) revert("Invalid Proof");
     }
 
     function _requireFromEntryPointOrOwner() internal view {
@@ -261,19 +269,12 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
 
     function _validateSignature(
         UserOperation calldata userOp,
-        bytes32 userOpHash,
-        address
+        bytes32 userOpHash
     ) internal view override returns (uint256 validationData) {
         bytes32 hash = userOpHash.toEthSignedMessageHash();
         if (owner() != hash.recover(userOp.signature))
             return SIG_VALIDATION_FAILED;
         return 0;
-    }
-
-    function _validateAndUpdateNonce(
-        UserOperation calldata userOp
-    ) internal override {
-        require(++_nonce == userOp.nonce, "account: invalid nonce");
     }
 
     function _payPrefund(uint256 missingAccountFunds) internal override {

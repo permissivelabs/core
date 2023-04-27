@@ -6,6 +6,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract FeeManager is Ownable {
     uint256 public fee = 2000;
+    bool initialized;
+
+    function initialize(address owner) external {
+        require(!initialized);
+        _transferOwnership(owner);
+        initialized = true;
+    }
 
     function setFee(uint256 _fee) external onlyOwner {
         fee = _fee;

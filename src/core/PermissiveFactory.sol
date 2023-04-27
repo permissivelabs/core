@@ -5,14 +5,14 @@ pragma solidity ^0.8.18;
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "./PermissiveAccount.sol";
-import "account-abstraction/interfaces/IEntryPoint.sol";
 import "./FeeManager.sol";
+import "account-abstraction/interfaces/IEntryPoint.sol";
 
 contract PermissiveFactory {
     PermissiveAccount public immutable accountImplementation;
 
-    constructor(IEntryPoint _entryPoint, FeeManager feeManager, bytes32 salt) {
-        accountImplementation = new PermissiveAccount{salt: salt}(
+    constructor(IEntryPoint _entryPoint, FeeManager feeManager) {
+        accountImplementation = new PermissiveAccount(
             address(_entryPoint),
             payable(address(feeManager))
         );

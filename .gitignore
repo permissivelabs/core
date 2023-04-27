@@ -3,3 +3,6 @@ cache
 artifacts
 .env
 broadcast
+node_modules
+cache_hardhat
+deployments
