@@ -76,7 +76,7 @@ library AllowanceCalldata {
                 );
                 i++;
             } else {
-                revert();
+                revert("Invalid calldata prefix");
             }
 
             if (!isOr && !canPass) break;
@@ -86,22 +86,23 @@ library AllowanceCalldata {
     }
 
     function isAllowedCalldata(
-        bytes calldata allowed,
-        bytes calldata data
-    ) external view returns (bool isOk) {
+        bytes memory allowed,
+        bytes memory data
+    ) internal view returns (bool isOk) {
         RLPReader.RLPItem memory RLPAllowed = RLPReader.toRlpItem(allowed);
         RLPReader.RLPItem[] memory allowedArguments = RLPReader.toList(
             RLPAllowed
         );
         RLPReader.RLPItem memory RLPData = RLPReader.toRlpItem(data);
         RLPReader.RLPItem[] memory arguments = RLPReader.toList(RLPData);
-        if (allowedArguments.length != arguments.length) revert();
+        if (allowedArguments.length != arguments.length)
+            revert("Invalid arguments length");
         isOk = validateArguments(allowedArguments, arguments, false);
     }
 
     function RLPtoABI(
-        bytes calldata data
-    ) external pure returns (bytes memory abiEncoded) {
+        bytes memory data
+    ) internal pure returns (bytes memory abiEncoded) {
         RLPReader.RLPItem memory RLPData = RLPReader.toRlpItem(data);
         RLPReader.RLPItem[] memory arguments = RLPReader.toList(RLPData);
         for (uint256 i = 0; i < arguments.length; i++) {
