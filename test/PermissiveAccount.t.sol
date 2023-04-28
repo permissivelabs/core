@@ -141,7 +141,7 @@ contract PermissiveAccountTest is Test {
                     "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
                 ),
                 keccak256(bytes("Permissive Account")),
-                keccak256(bytes("0.0.3")),
+                keccak256(bytes("v0.0.3")),
                 address(account)
             )
         );
@@ -232,63 +232,74 @@ contract PermissiveAccountTest is Test {
         );
     }
 
-    // function testNoArgs() external {
-    //     testTransactionPasses();
-    //     Incrementer incr = new Incrementer();
-    //     Permission memory perm = Permission(
-    //         operator,
-    //         address(incr),
-    //         incr.increment.selector,
-    //         hex"c0",
-    //         address(0),
-    //         1713986312,
-    //         0,
-    //         0
-    //     );
-    //     ops.pop();
-    //     permissions.pop();
-    //     permissions.push(perm);
-    //     bytes32 root = keccak256(bytes.concat(hashPermission(perm)));
-    //     bytes32 digest = utils.getTypedDataHash(
-    //         Permit(operator, root, 0, 0.11 ether)
-    //     );
-    //     (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
-    //     account.setOperatorPermissions(
-    //         operator,
-    //         root,
-    //         0,
-    //         0.11 ether,
-    //         abi.encodePacked(r, s, v)
-    //     );
-    //     UserOperation memory op = UserOperation(
-    //         address(account),
-    //         account.getNonce(),
-    //         hex"",
-    //         abi.encodeWithSelector(
-    //             account.execute.selector,
-    //             address(incr),
-    //             0,
-    //             abi.encodePacked(incr.increment.selector, hex"c0"),
-    //             permissions[0],
-    //             proofs
-    //         ),
-    //         10000000,
-    //         10000000,
-    //         10000,
-    //         10000,
-    //         10000,
-    //         hex"",
-    //         hex""
-    //     );
-    //     (uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(
-    //         operatorPrivateKey,
-    //         entrypoint.getUserOpHash(op).toEthSignedMessageHash()
-    //     );
-    //     op.signature = abi.encodePacked(r2, s2, v2);
-    //     ops.push(op);
-    //     entrypoint.handleOps(ops, payable(address(this)));
-    //     assert(incr.value() == 1);
-    // }
+    function testNoArgs() external {
+        testTransactionPasses();
+        Incrementer incr = new Incrementer();
+        Permission memory perm = Permission(
+            operator,
+            address(incr),
+            incr.increment.selector,
+            hex"c0",
+            address(0),
+            1713986312,
+            0,
+            0
+        );
+        ops.pop();
+        permissions.pop();
+        permissions.push(perm);
+        bytes32 root = keccak256(bytes.concat(hashPermission(perm)));
+        bytes32 digest = utils.getTypedDataHash(
+            Permit(operator, root, 0, 0.11 ether)
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
+        account.setOperatorPermissions(
+            operator,
+            root,
+            0,
+            0.11 ether,
+            abi.encodePacked(r, s, v)
+        );
+        UserOperation memory op = UserOperation(
+            address(account),
+            account.getNonce(),
+            hex"",
+            abi.encodeWithSelector(
+                account.execute.selector,
+                address(incr),
+                0,
+                abi.encodePacked(incr.increment.selector, hex"c0"),
+                permissions[0],
+                proofs
+            ),
+            10000000,
+            10000000,
+            10000,
+            10000,
+            10000,
+            hex"",
+            hex""
+        );
+        uint computedFee = account.computeGasFee(op);
+        op.callData = abi.encodeWithSelector(
+            account.execute.selector,
+            address(incr),
+            0,
+            abi.encodePacked(incr.increment.selector, hex"c0"),
+            permissions[0],
+            proofs,
+            computedFee
+        );
+        (uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(
+            operatorPrivateKey,
+            entrypoint.getUserOpHash(op).toEthSignedMessageHash()
+        );
+        op.signature = abi.encodePacked(r2, s2, v2);
+        ops.push(op);
+        payable(account).transfer((feeManager.fee() * computedFee) / 10000);
+        entrypoint.handleOps(ops, payable(address(this)));
+        assert(incr.value() == 1);
+    }
 
     receive() external payable {}
 }

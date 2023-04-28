@@ -15,10 +15,10 @@ contract DeployScript is Script {
         bytes32 versionSalt = vm.envBytes32("VERSION_SALT");
         vm.startBroadcast(deployerPrivateKey);
         FeeManager feeManager = new FeeManager{salt: versionSalt}();
+        feeManager.initialize(vm.envAddress("OWNER"));
         PermissiveFactory factory = new PermissiveFactory{salt: versionSalt}(
             IEntryPoint(entrypoint),
-            feeManager,
-            versionSalt
+            feeManager
         );
         vm.stopBroadcast();
     }

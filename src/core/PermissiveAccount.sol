@@ -31,7 +31,7 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
     constructor(
         address __entryPoint,
         address payable _feeManager
-    ) EIP712("Permissive Account", "0.0.3") {
+    ) EIP712("Permissive Account", "v0.0.3") {
         _entryPoint = IEntryPoint(__entryPoint);
         feeManager = FeeManager(_feeManager);
     }
