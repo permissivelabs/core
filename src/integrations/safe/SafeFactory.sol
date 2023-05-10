@@ -4,38 +4,36 @@ pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import "./PermissiveAccount.sol";
-import "./FeeManager.sol";
-import "account-abstraction/interfaces/IEntryPoint.sol";
+import "./SafeModule.sol";
 
-contract PermissiveFactory {
-    PermissiveAccount public immutable accountImplementation;
+contract SafeFactory {
+    SafeModule public immutable moduleImplementation;
 
     constructor(address entrypoint, address payable feeManager) {
-        accountImplementation = new PermissiveAccount(entrypoint, feeManager);
+        moduleImplementation = new SafeModule(entrypoint, feeManager);
     }
 
-    function createAccount(
-        address owner,
+    function createModule(
+        address safe,
         uint256 salt
-    ) public returns (PermissiveAccount ret) {
-        address addr = getAddress(owner, salt);
+    ) public returns (SafeModule ret) {
+        address addr = getAddress(safe, salt);
         uint codeSize = addr.code.length;
         if (codeSize > 0) {
-            return PermissiveAccount(payable(addr));
+            return SafeModule(payable(addr));
         }
-        ret = PermissiveAccount(
+        ret = SafeModule(
             payable(
                 new ERC1967Proxy{salt: bytes32(salt)}(
-                    address(accountImplementation),
-                    abi.encodeCall(PermissiveAccount.initialize, (owner))
+                    address(moduleImplementation),
+                    abi.encodeCall(SafeModule.setSafe, (safe))
                 )
             )
         );
     }
 
     function getAddress(
-        address owner,
+        address safe,
         uint256 salt
     ) public view returns (address) {
         return
@@ -45,11 +43,8 @@ contract PermissiveFactory {
                     abi.encodePacked(
                         type(ERC1967Proxy).creationCode,
                         abi.encode(
-                            address(accountImplementation),
-                            abi.encodeCall(
-                                PermissiveAccount.initialize,
-                                (owner)
-                            )
+                            address(moduleImplementation),
+                            abi.encodeCall(SafeModule.setSafe, (safe))
                         )
                     )
                 )
