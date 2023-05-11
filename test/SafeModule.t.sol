@@ -38,7 +38,7 @@ contract SafeModuleTest is Test {
             address(entrypoint),
             payable(address(feeManager))
         );
-        account = factory.createModule(
+        account = factory.createAccount(
             address(owner),
             0x000000000000000000000000a8b802b27fb4fad58ed28cb6f4ae5061bd432e8c
         );

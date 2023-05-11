@@ -13,7 +13,7 @@ contract SafeFactory {
         moduleImplementation = new SafeModule(entrypoint, feeManager);
     }
 
-    function createModule(
+    function createAccount(
         address safe,
         uint256 salt
     ) public returns (SafeModule ret) {
