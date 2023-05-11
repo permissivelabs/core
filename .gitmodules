@@ -14,3 +14,6 @@
 	path = lib/solidity-bytes-utils
 	url = https://github.com/GNSPS/solidity-bytes-utils
 	branch = v0.8.0
+[submodule "lib/safe-contracts"]
+	path = lib/safe-contracts
+	url = https://github.com/safe-global/safe-contracts

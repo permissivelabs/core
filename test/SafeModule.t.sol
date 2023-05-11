@@ -2,103 +2,26 @@
 pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
-import "../src/core/PermissiveAccount.sol";
-import "../src/core/PermissiveFactory.sol";
+import "../src/integrations/safe/SafeFactory.sol";
+import "../src/integrations/safe/SafeModule.sol";
 import "../src/core/FeeManager.sol";
 import "../src/tests/Token.sol";
 import "../src/tests/Incrementer.sol";
 import "../lib/account-abstraction/contracts/core/EntryPoint.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "safe/Safe.sol";
 
 address constant receiver = 0x690B9A9E9aa1C9dB991C7721a92d351Db4FaC990;
 
-struct Permit {
-    address operator;
-    bytes32 merkleRootPermissions;
-    uint256 maxValue;
-    uint256 maxFee;
-}
-
-library DomainSeparatorUtils {
-    function buildDomainSeparator(
-        bytes32 typeHash,
-        bytes32 nameHash,
-        bytes32 versionHash,
-        address target
-    ) public view returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(
-                    typeHash,
-                    nameHash,
-                    versionHash,
-                    block.chainid,
-                    target
-                )
-            );
-    }
-
-    function efficientHash(
-        bytes32 a,
-        bytes32 b
-    ) public pure returns (bytes32 value) {
-        /// @solidity memory-safe-assembly
-        assembly {
-            mstore(0x00, a)
-            mstore(0x20, b)
-            value := keccak256(0x00, 0x40)
-        }
-    }
-}
-
-contract SigUtils {
-    bytes32 public DOMAIN_SEPARATOR;
-
-    constructor(bytes32 _DOMAIN_SEPARATOR) {
-        DOMAIN_SEPARATOR = _DOMAIN_SEPARATOR;
-    }
-
-    bytes32 public constant TYPEHASH =
-        0xcd3966ea44fb027b668c722656f7791caa71de9073b3cbb77585cc6fa97ce82e;
-
-    function getStructHash(
-        Permit memory _permit
-    ) internal pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(
-                    TYPEHASH,
-                    _permit.operator,
-                    _permit.merkleRootPermissions,
-                    _permit.maxValue,
-                    _permit.maxFee
-                )
-            );
-    }
-
-    function getTypedDataHash(
-        Permit memory _permit
-    ) public view returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked(
-                    "\x19\x01",
-                    DOMAIN_SEPARATOR,
-                    getStructHash(_permit)
-                )
-            );
-    }
-}
-
-contract PermissiveAccountTest is Test {
+contract SafeModuleTest is Test {
     using ECDSA for bytes32;
-    PermissiveAccount internal account;
+    SafeModule internal account;
     EntryPoint internal entrypoint;
-    PermissiveFactory internal factory;
+    SafeFactory internal factory;
     Token internal token;
     Permission[] internal permissions;
     UserOperation[] internal ops;
-    address internal owner = 0xa8b802B27FB4FAD58Ed28Cb6F4Ae5061bD432e8c;
+    Safe internal owner = new Safe();
     uint internal ownerPrivateKey =
         0x18104766cc86e7fb8a7452ac9fb2bccc465a88a9bba2d2d67a5ffd3f459f820f;
     address internal operator = 0xabe1DE8764303a2d4421Ea583ef693CF6cAc109A;
@@ -107,17 +30,16 @@ contract PermissiveAccountTest is Test {
     bytes32[] internal proofs;
     uint[] internal numbers;
     FeeManager internal feeManager;
-    SigUtils internal utils;
 
     function setUp() public {
         entrypoint = new EntryPoint{salt: bytes32("Permissive-v0.0.3")}();
         feeManager = new FeeManager{salt: bytes32("Permissive-v0.0.3")}();
-        factory = new PermissiveFactory{salt: bytes32("Permissive-v0.0.3")}(
+        factory = new SafeFactory{salt: bytes32("Permissive-v0.0.3")}(
             address(entrypoint),
             payable(address(feeManager))
         );
         account = factory.createAccount(
-            owner,
+            address(owner),
             0x000000000000000000000000a8b802b27fb4fad58ed28cb6f4ae5061bd432e8c
         );
         token = new Token("USD Coin", "USDC");
@@ -135,16 +57,6 @@ contract PermissiveAccountTest is Test {
             2
         );
         permissions.push(perm);
-        utils = new SigUtils(
-            DomainSeparatorUtils.buildDomainSeparator(
-                keccak256(
-                    "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-                ),
-                keccak256(bytes("Permissive Account")),
-                keccak256(bytes("v0.0.3")),
-                address(account)
-            )
-        );
     }
 
     function hashPermission(
@@ -166,17 +78,8 @@ contract PermissiveAccountTest is Test {
 
     function testPermissionsGranted() public {
         bytes32 root = keccak256(bytes.concat(hashPermission(permissions[0])));
-        bytes32 digest = utils.getTypedDataHash(
-            Permit(operator, root, 0, 1 ether)
-        );
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
-        account.setOperatorPermissions(
-            operator,
-            root,
-            0,
-            1 ether,
-            abi.encodePacked(r, s, v)
-        );
+        vm.prank(address(owner));
+        account.setOperatorPermissions(operator, root, 0, 1 ether);
         assert(account.remainingFeeForOperator(operator) == 1 ether);
         assert(account.remainingValueForOperator(operator) == 0);
         assert(account.operatorPermissions(operator) == root);
@@ -249,17 +152,8 @@ contract PermissiveAccountTest is Test {
         permissions.pop();
         permissions.push(perm);
         bytes32 root = keccak256(bytes.concat(hashPermission(perm)));
-        bytes32 digest = utils.getTypedDataHash(
-            Permit(operator, root, 0, 0.11 ether)
-        );
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
-        account.setOperatorPermissions(
-            operator,
-            root,
-            0,
-            0.11 ether,
-            abi.encodePacked(r, s, v)
-        );
+        vm.prank(address(owner));
+        account.setOperatorPermissions(operator, root, 0, 0.11 ether);
         UserOperation memory op = UserOperation(
             address(account),
             account.getNonce(),
