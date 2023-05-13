@@ -42,6 +42,7 @@ contract SafeModule is ISafeModule {
     function setSafe(address _safe) external {
         _onlySafe();
         safe = ISafe(_safe);
+        emit NewSafe(_safe);
     }
 
     // EXTERNAL FUNCTIONS

@@ -8,6 +8,11 @@ import "./SafeModule.sol";
 
 contract SafeFactory {
     SafeModule public immutable moduleImplementation;
+    event AccountCreated(
+        address indexed safe,
+        uint256 indexed salt,
+        address indexed account
+    );
 
     constructor(address entrypoint, address payable feeManager) {
         moduleImplementation = new SafeModule(entrypoint, feeManager);
@@ -30,6 +35,7 @@ contract SafeFactory {
                 )
             )
         );
+        emit AccountCreated(safe, salt, address(ret));
     }
 
     function getAddress(

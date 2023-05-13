@@ -17,8 +17,8 @@ contract DeployScript is Script {
         FeeManager feeManager = new FeeManager{salt: versionSalt}();
         feeManager.initialize(vm.envAddress("OWNER"));
         PermissiveFactory factory = new PermissiveFactory{salt: versionSalt}(
-            IEntryPoint(entrypoint),
-            feeManager
+            entrypoint,
+            payable(address(feeManager))
         );
         vm.stopBroadcast();
     }

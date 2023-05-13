@@ -120,6 +120,7 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
             remainingFeeForOperator[permission.operator] -= gasFee;
         }
         _payPrefund(missingAccountFunds);
+        emit UserOpValidated(userOpHash, userOp);
     }
 
     function execute(
@@ -155,6 +156,14 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
                 func.slice(0, 4),
                 AllowanceCalldata.RLPtoABI(func.slice(4, func.length - 4))
             )
+        );
+        emit PermissionUsed(
+            hashPerm(permission),
+            dest,
+            value,
+            func,
+            permission,
+            gasFee
         );
         if (!success) {
             assembly {
