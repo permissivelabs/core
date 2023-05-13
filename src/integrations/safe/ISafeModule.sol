@@ -24,4 +24,6 @@ interface ISafeModule {
         uint256 maxValue,
         uint256 maxFee
     );
+
+    event NewSafe(address safe);
 }

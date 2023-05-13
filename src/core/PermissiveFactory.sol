@@ -11,6 +11,12 @@ import "account-abstraction/interfaces/IEntryPoint.sol";
 contract PermissiveFactory {
     PermissiveAccount public immutable accountImplementation;
 
+    event AccountCreated(
+        address indexed owner,
+        uint256 indexed salt,
+        address indexed account
+    );
+
     constructor(address entrypoint, address payable feeManager) {
         accountImplementation = new PermissiveAccount(entrypoint, feeManager);
     }
@@ -32,6 +38,7 @@ contract PermissiveFactory {
                 )
             )
         );
+        emit AccountCreated(owner, salt, address(ret));
     }
 
     function getAddress(

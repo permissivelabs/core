@@ -1,5 +1,5 @@
 # Deployments
 
-| factory                                    | account implementation                     | fee manager                                |
-| ------------------------------------------ | ------------------------------------------ | ------------------------------------------ |
-| 0xA0f2BC600ABce58558590674A41EF52eC335A90A | 0x23E4f1cD1F842effCd260daCcD6fFf7a24E0f7c6 | 0xd3bfe05a94e8ffe5f087aaa7b9665d484deb2ced |
+| factory                                    | account implementation                     | fee manager                                | safe factory                               |
+| ------------------------------------------ | ------------------------------------------ | ------------------------------------------ | ------------------------------------------ |
+| 0x499dcb87582897b050fa0579eb0d5fe71ce491b3 | 0x031d104686cde4d7ac2a31831efe36eee888af2c | 0x2ad29cc25d9fb3647b304353a0a609f27afe380b | 0x0c850e3c696871e6b72a410bea7b1c96870e0715 |

@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract FeeManager is Ownable {
     uint256 public fee = 2000;
     bool initialized;
+    event FeePaid(address indexed from, uint amount);
 
     function initialize(address owner) external {
         require(!initialized);
@@ -22,5 +23,7 @@ contract FeeManager is Ownable {
         payable(msg.sender).transfer(address(this).balance);
     }
 
-    receive() external payable {}
+    receive() external payable {
+        emit FeePaid(msg.sender, msg.value);
+    }
 }

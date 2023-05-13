@@ -25,6 +25,16 @@ interface IPermissiveAccount is IAccount {
         uint256 maxFee
     );
 
+    event UserOpValidated(bytes32 indexed userOpHash, UserOperation userOp);
+    event PermissionUsed(
+        bytes32 indexed permHash,
+        address dest,
+        uint256 value,
+        bytes func,
+        Permission permission,
+        uint256 gasFee
+    );
+
     function initialize(address owner) external;
 
     function setOperatorPermissions(
