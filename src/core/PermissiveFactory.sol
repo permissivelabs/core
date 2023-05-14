@@ -11,22 +11,15 @@ import "account-abstraction/interfaces/IEntryPoint.sol";
 contract PermissiveFactory {
     PermissiveAccount public immutable accountImplementation;
 
-    event AccountCreated(
-        address indexed owner,
-        uint256 indexed salt,
-        address indexed account
-    );
+    event AccountCreated(address indexed owner, uint256 indexed salt, address indexed account);
 
     constructor(address entrypoint, address payable feeManager) {
         accountImplementation = new PermissiveAccount(entrypoint, feeManager);
     }
 
-    function createAccount(
-        address owner,
-        uint256 salt
-    ) public returns (PermissiveAccount ret) {
+    function createAccount(address owner, uint256 salt) public returns (PermissiveAccount ret) {
         address addr = getAddress(owner, salt);
-        uint codeSize = addr.code.length;
+        uint256 codeSize = addr.code.length;
         if (codeSize > 0) {
             return PermissiveAccount(payable(addr));
         }
@@ -41,25 +34,15 @@ contract PermissiveFactory {
         emit AccountCreated(owner, salt, address(ret));
     }
 
-    function getAddress(
-        address owner,
-        uint256 salt
-    ) public view returns (address) {
-        return
-            Create2.computeAddress(
-                bytes32(salt),
-                keccak256(
-                    abi.encodePacked(
-                        type(ERC1967Proxy).creationCode,
-                        abi.encode(
-                            address(accountImplementation),
-                            abi.encodeCall(
-                                PermissiveAccount.initialize,
-                                (owner)
-                            )
-                        )
-                    )
+    function getAddress(address owner, uint256 salt) public view returns (address) {
+        return Create2.computeAddress(
+            bytes32(salt),
+            keccak256(
+                abi.encodePacked(
+                    type(ERC1967Proxy).creationCode,
+                    abi.encode(address(accountImplementation), abi.encodeCall(PermissiveAccount.initialize, (owner)))
                 )
-            );
+            )
+        );
     }
 }

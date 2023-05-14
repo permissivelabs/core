@@ -15,23 +15,22 @@ interface IPermissiveAccount is IAccount {
     error InvalidPermission();
     error InvalidPaymaster(address provided, address expected);
     error InvalidSelector(bytes4 provided, bytes4 expected);
-    error ExpiredPermission(uint current, uint expiredAt);
+    error ExpiredPermission(uint256 current, uint256 expiredAt);
 
     event OperatorMutated(
-        address operator,
-        bytes32 oldPermissions,
-        bytes32 newPermissions,
+        address indexed operator,
+        bytes32 indexed oldPermissions,
+        bytes32 indexed newPermissions,
         uint256 maxValue,
         uint256 maxFee
     );
-
     event UserOpValidated(bytes32 indexed userOpHash, UserOperation userOp);
     event PermissionUsed(
         bytes32 indexed permHash,
         address dest,
         uint256 value,
         bytes func,
-        Permission permission,
+        PermissionLib.Permission permission,
         uint256 gasFee
     );
 

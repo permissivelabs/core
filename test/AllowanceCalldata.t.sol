@@ -13,14 +13,10 @@ contract AllowanceCalldataTest is Test {
     function hasNoZeroPrefix(bytes calldata data) internal pure returns (bool) {
         RLPReader.RLPItem memory RLPAllowed = RLPReader.toRlpItem(data);
         if (!RLPReader.isList(RLPAllowed)) return false;
-        RLPReader.RLPItem[] memory allowedArguments = RLPReader.toList(
-            RLPAllowed
-        );
-        for (uint i = 0; i < allowedArguments.length; i++) {
-            RLPReader.RLPItem[] memory prefixAndArg = RLPReader.toList(
-                allowedArguments[i]
-            );
-            uint prefix = RLPReader.toUint(prefixAndArg[0]);
+        RLPReader.RLPItem[] memory allowedArguments = RLPReader.toList(RLPAllowed);
+        for (uint256 i = 0; i < allowedArguments.length; i++) {
+            RLPReader.RLPItem[] memory prefixAndArg = RLPReader.toList(allowedArguments[i]);
+            uint256 prefix = RLPReader.toUint(prefixAndArg[0]);
             if (prefix == 0) return false;
         }
         return true;
@@ -32,16 +28,12 @@ contract AllowanceCalldataTest is Test {
         AllowanceCalldata.isAllowedCalldata(allowanceData, data);
     }
 
-    function testShouldFailBecauseUnauthorizedAllowanceData(
-        bytes calldata data
-    ) public {
+    function testShouldFailBecauseUnauthorizedAllowanceData(bytes calldata data) public {
         vm.expectRevert();
         AllowanceCalldata.isAllowedCalldata(data, callData);
     }
 
     function testValidCall() public view {
-        assert(
-            AllowanceCalldata.isAllowedCalldata(allowanceData, callData) == true
-        );
+        assert(AllowanceCalldata.isAllowedCalldata(allowanceData, callData) == true);
     }
 }

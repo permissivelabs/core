@@ -5,3 +5,4 @@ forge-std/=lib/forge-std/src/
 @openzeppelin/=lib/openzeppelin-contracts/
 bytes/=lib/solidity-bytes-utils/contracts/
 safe/=lib/safe-contracts/contracts/
+zerodev/=lib/zerodev-wallet-kernel/src/

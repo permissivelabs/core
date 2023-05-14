@@ -3,6 +3,8 @@
 pragma solidity ^0.8.18;
 
 import "./ISafe.sol";
+import "account-abstraction/interfaces/IAccount.sol";
+import "../../interfaces/Permission.sol";
 
 interface ISafeModule {
     error InvalidSafe(address safe);
@@ -15,15 +17,23 @@ interface ISafeModule {
     error InvalidPermission();
     error InvalidPaymaster(address provided, address expected);
     error InvalidSelector(bytes4 provided, bytes4 expected);
-    error ExpiredPermission(uint current, uint expiredAt);
+    error ExpiredPermission(uint256 current, uint256 expiredAt);
 
     event OperatorMutated(
-        address operator,
-        bytes32 oldPermissions,
-        bytes32 newPermissions,
+        address indexed operator,
+        bytes32 indexed oldPermissions,
+        bytes32 indexed newPermissions,
         uint256 maxValue,
         uint256 maxFee
     );
-
+    event UserOpValidated(bytes32 indexed userOpHash, UserOperation userOp);
+    event PermissionUsed(
+        bytes32 indexed permHash,
+        address dest,
+        uint256 value,
+        bytes func,
+        PermissionLib.Permission permission,
+        uint256 gasFee
+    );
     event NewSafe(address safe);
 }
