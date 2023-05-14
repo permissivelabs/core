@@ -17,3 +17,7 @@
 [submodule "lib/safe-contracts"]
 	path = lib/safe-contracts
 	url = https://github.com/safe-global/safe-contracts
+[submodule "lib/zerodev-wallet-kernel"]
+	path = lib/zerodev-wallet-kernel
+	url = https://github.com/zerodevapp/zerodev-wallet-kernel
+	branch = kernel_v2
