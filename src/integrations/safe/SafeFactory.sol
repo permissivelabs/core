@@ -8,22 +8,16 @@ import "./SafeModule.sol";
 
 contract SafeFactory {
     SafeModule public immutable moduleImplementation;
-    event AccountCreated(
-        address indexed safe,
-        uint256 indexed salt,
-        address indexed account
-    );
+
+    event AccountCreated(address indexed safe, uint256 indexed salt, address indexed account);
 
     constructor(address entrypoint, address payable feeManager) {
         moduleImplementation = new SafeModule(entrypoint, feeManager);
     }
 
-    function createAccount(
-        address safe,
-        uint256 salt
-    ) public returns (SafeModule ret) {
+    function createAccount(address safe, uint256 salt) public returns (SafeModule ret) {
         address addr = getAddress(safe, salt);
-        uint codeSize = addr.code.length;
+        uint256 codeSize = addr.code.length;
         if (codeSize > 0) {
             return SafeModule(payable(addr));
         }
@@ -38,22 +32,15 @@ contract SafeFactory {
         emit AccountCreated(safe, salt, address(ret));
     }
 
-    function getAddress(
-        address safe,
-        uint256 salt
-    ) public view returns (address) {
-        return
-            Create2.computeAddress(
-                bytes32(salt),
-                keccak256(
-                    abi.encodePacked(
-                        type(ERC1967Proxy).creationCode,
-                        abi.encode(
-                            address(moduleImplementation),
-                            abi.encodeCall(SafeModule.setSafe, (safe))
-                        )
-                    )
+    function getAddress(address safe, uint256 salt) public view returns (address) {
+        return Create2.computeAddress(
+            bytes32(salt),
+            keccak256(
+                abi.encodePacked(
+                    type(ERC1967Proxy).creationCode,
+                    abi.encode(address(moduleImplementation), abi.encodeCall(SafeModule.setSafe, (safe)))
                 )
-            );
+            )
+        );
     }
 }

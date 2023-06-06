@@ -1,19 +1,23 @@
 [submodule "lib/Solidity-RLP"]
 	path = lib/Solidity-RLP
 	url = https://github.com/hamdiallam/Solidity-RLP
-	branch = v2.0.7
+	branch = master
 [submodule "lib/account-abstraction"]
 	path = lib/account-abstraction
 	url = https://github.com/eth-infinitism/account-abstraction
-	branch = v0.4.0
+	branch = ver0.6.0
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
-	branch = v4.8.2
+	branch = master
 [submodule "lib/solidity-bytes-utils"]
 	path = lib/solidity-bytes-utils
 	url = https://github.com/GNSPS/solidity-bytes-utils
-	branch = v0.8.0
+	branch = master
 [submodule "lib/safe-contracts"]
 	path = lib/safe-contracts
 	url = https://github.com/safe-global/safe-contracts
+[submodule "lib/zerodev-wallet-kernel"]
+	path = lib/zerodev-wallet-kernel
+	url = https://github.com/zerodevapp/zerodev-wallet-kernel
+	branch = kernel_v2
