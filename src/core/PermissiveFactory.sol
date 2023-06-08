@@ -3,21 +3,24 @@
 pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/utils/Create2.sol";
-import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
+import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import "./PermissiveAccount.sol";
 import "./FeeManager.sol";
-import "account-abstraction/interfaces/IEntryPoint.sol";
 
-contract PermissiveFactory {
-    PermissiveAccount public immutable accountImplementation;
+contract PermissiveFactory is UpgradeableBeacon {
+    event AccountCreated(
+        address indexed owner,
+        uint256 indexed salt,
+        address indexed account
+    );
 
-    event AccountCreated(address indexed owner, uint256 indexed salt, address indexed account);
+    constructor(address _impl) UpgradeableBeacon(_impl) {}
 
-    constructor(address entrypoint, address payable feeManager) {
-        accountImplementation = new PermissiveAccount(entrypoint, feeManager);
-    }
-
-    function createAccount(address owner, uint256 salt) public returns (PermissiveAccount ret) {
+    function createAccount(
+        address owner,
+        uint256 salt
+    ) public returns (PermissiveAccount ret) {
         address addr = getAddress(owner, salt);
         uint256 codeSize = addr.code.length;
         if (codeSize > 0) {
@@ -25,8 +28,8 @@ contract PermissiveFactory {
         }
         ret = PermissiveAccount(
             payable(
-                new ERC1967Proxy{salt: bytes32(salt)}(
-                    address(accountImplementation),
+                new BeaconProxy{salt: bytes32(salt)}(
+                    address(this),
                     abi.encodeCall(PermissiveAccount.initialize, (owner))
                 )
             )
@@ -34,15 +37,25 @@ contract PermissiveFactory {
         emit AccountCreated(owner, salt, address(ret));
     }
 
-    function getAddress(address owner, uint256 salt) public view returns (address) {
-        return Create2.computeAddress(
-            bytes32(salt),
-            keccak256(
-                abi.encodePacked(
-                    type(ERC1967Proxy).creationCode,
-                    abi.encode(address(accountImplementation), abi.encodeCall(PermissiveAccount.initialize, (owner)))
+    function getAddress(
+        address owner,
+        uint256 salt
+    ) public view returns (address) {
+        return
+            Create2.computeAddress(
+                bytes32(salt),
+                keccak256(
+                    abi.encodePacked(
+                        type(BeaconProxy).creationCode,
+                        abi.encode(
+                            address(this),
+                            abi.encodeCall(
+                                PermissiveAccount.initialize,
+                                (owner)
+                            )
+                        )
+                    )
                 )
-            )
-        );
+            );
     }
 }

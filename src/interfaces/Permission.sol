@@ -2,6 +2,15 @@
 
 pragma solidity ^0.8.18;
 
+struct DataValidation {
+    // address of your IValidator
+    address validator;
+    // address of the contract to call
+    address target;
+    // address of the calldata sent to the contract
+    bytes data;
+}
+
 library PermissionLib {
     struct Permission {
         // the operator
@@ -10,21 +19,24 @@ library PermissionLib {
         address to;
         // the function selector
         bytes4 selector;
-        // specific arguments that are allowed for this permisison (see readme)
+        // specific arguments that are allowed for this permisison (see readme), the first one is the value
         bytes allowed_arguments;
         // the paymaster if set will pay the transactions
         address paymaster;
         // the timestamp when the permission isn't valid anymore
-        // @dev can be 0 if expires_at_block != 0
-        uint256 expiresAtUnix;
-        // the block when the permission isn't valid anymore
-        // @dev can be 0 if expires_at_unix != 0
-        uint256 expiresAtBlock;
+        // @dev can be 0 to express infinite
+        uint48 validUntil;
+        // the timestamp - 1 when the permission becomes valid
+        uint48 validAfter;
         // the max number of times + 1 this permision can be used, 0 = infinite
         uint256 maxUsage;
+        // validate on-chain data
+        DataValidation dataValidation;
     }
 
-    function hash(Permission memory permission) internal pure returns (bytes32 permHash) {
+    function hash(
+        Permission memory permission
+    ) internal pure returns (bytes32 permHash) {
         permHash = keccak256(
             abi.encode(
                 permission.operator,
@@ -32,9 +44,10 @@ library PermissionLib {
                 permission.selector,
                 permission.allowed_arguments,
                 permission.paymaster,
-                permission.expiresAtUnix,
-                permission.expiresAtBlock,
-                permission.maxUsage
+                permission.validUntil,
+                permission.validAfter,
+                permission.maxUsage,
+                permission.dataValidation
             )
         );
     }
