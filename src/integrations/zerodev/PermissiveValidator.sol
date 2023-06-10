@@ -122,8 +122,8 @@
 //         }
 //     }
 
-//     /* 
-//         INTERNAL 
+//     /*
+//         INTERNAL
 //     */
 
 //     function _validatePermission(

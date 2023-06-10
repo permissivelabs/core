@@ -13,13 +13,9 @@ contract AllowanceCalldataTest is Test {
     function hasNoZeroPrefix(bytes calldata data) internal pure returns (bool) {
         RLPReader.RLPItem memory RLPAllowed = RLPReader.toRlpItem(data);
         if (!RLPReader.isList(RLPAllowed)) return false;
-        RLPReader.RLPItem[] memory allowedArguments = RLPReader.toList(
-            RLPAllowed
-        );
+        RLPReader.RLPItem[] memory allowedArguments = RLPReader.toList(RLPAllowed);
         for (uint256 i = 0; i < allowedArguments.length; i++) {
-            RLPReader.RLPItem[] memory prefixAndArg = RLPReader.toList(
-                allowedArguments[i]
-            );
+            RLPReader.RLPItem[] memory prefixAndArg = RLPReader.toList(allowedArguments[i]);
             uint256 prefix = RLPReader.toUint(prefixAndArg[0]);
             if (prefix == 0) return false;
         }
@@ -32,17 +28,12 @@ contract AllowanceCalldataTest is Test {
         AllowanceCalldata.isAllowedCalldata(allowanceData, data, 0);
     }
 
-    function testShouldFailBecauseUnauthorizedAllowanceData(
-        bytes calldata data
-    ) public {
+    function testShouldFailBecauseUnauthorizedAllowanceData(bytes calldata data) public {
         vm.expectRevert();
         AllowanceCalldata.isAllowedCalldata(data, callData, 0);
     }
 
     function testValidCall() public view {
-        assert(
-            AllowanceCalldata.isAllowedCalldata(allowanceData, callData, 0) ==
-                true
-        );
+        assert(AllowanceCalldata.isAllowedCalldata(allowanceData, callData, 0) == true);
     }
 }

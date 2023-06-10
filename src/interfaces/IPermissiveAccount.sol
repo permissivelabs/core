@@ -22,11 +22,7 @@ interface IPermissiveAccount is IAccount {
     error InvalidSelector(bytes4 provided, bytes4 expected);
     error ExpiredPermission(uint256 current, uint256 expiredAt);
 
-    event OperatorMutated(
-        address indexed operator,
-        bytes32 indexed oldPermissions,
-        bytes32 indexed newPermissions
-    );
+    event OperatorMutated(address indexed operator, bytes32 indexed oldPermissions, bytes32 indexed newPermissions);
     event UserOpValidated(bytes32 indexed userOpHash, UserOperation userOp);
     event PermissionUsed(
         bytes32 indexed permHash,
@@ -39,8 +35,5 @@ interface IPermissiveAccount is IAccount {
 
     function initialize(address owner) external;
 
-    function setOperatorPermissions(
-        PermissionSet calldata permSet,
-        bytes calldata signature
-    ) external;
+    function setOperatorPermissions(PermissionSet calldata permSet, bytes calldata signature) external;
 }
