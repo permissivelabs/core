@@ -82,13 +82,13 @@ contract PermissiveAccountTest is Test {
     SigUtils internal utils;
 
     function setUp() public {
-        entrypoint = new EntryPoint{salt: bytes32("Permissive-v0.0.3")}();
-        feeManager = new FeeManager{salt: bytes32("Permissive-v0.0.3")}();
+        entrypoint = new EntryPoint{salt: bytes32("Permissive-v0.0.4")}();
+        feeManager = new FeeManager{salt: bytes32("Permissive-v0.0.4")}();
         PermissiveAccount impl = new PermissiveAccount(
             address(entrypoint),
             payable(address(feeManager))
         );
-        factory = new PermissiveFactory{salt: bytes32("Permissive-v0.0.3")}(
+        factory = new PermissiveFactory{salt: bytes32("Permissive-v0.0.4")}(
             address(impl)
         );
         account = factory.createAccount(owner, 0x000000000000000000000000a8b802b27fb4fad58ed28cb6f4ae5061bd432e8c);
@@ -114,7 +114,7 @@ contract PermissiveAccountTest is Test {
                     "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
                 ),
                 keccak256(bytes("Permissive Account")),
-                keccak256(bytes("v0.0.3")),
+                keccak256(bytes("v0.0.4")),
                 address(account)
             )
         );

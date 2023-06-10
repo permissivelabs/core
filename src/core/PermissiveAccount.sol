@@ -14,7 +14,6 @@ import "./AllowanceCalldata.sol";
 import "bytes/BytesLib.sol";
 import "./FeeManager.sol";
 import "../interfaces/IDataValidator.sol";
-import "forge-std/console.sol";
 
 // keccak256("PermissionSet(address operator,bytes32 merkleRootPermissions)")
 bytes32 constant typedStruct = 0xd7e1e23484f808c5620ce8d904e88d7540a3eeb37ac94e636726ed53571e4e3c;
@@ -30,7 +29,7 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
     FeeManager private immutable feeManager;
     bool private _initialized;
 
-    constructor(address __entryPoint, address payable _feeManager) EIP712("Permissive Account", "v0.0.3") {
+    constructor(address __entryPoint, address payable _feeManager) EIP712("Permissive Account", "v0.0.4") {
         _entryPoint = IEntryPoint(__entryPoint);
         feeManager = FeeManager(_feeManager);
     }
@@ -132,7 +131,7 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
         return ECDSA.toTypedDataHash(_domainSeparatorV4(), structHash);
     }
 
-    function _validateData(PermissionLib.Permission memory permission) internal {
+    function _validateData(PermissionLib.Permission memory permission) internal view {
         if (
             permission.dataValidation.validator != address(0)
                 && !IDataValidator(permission.dataValidation.validator).isValidData(
