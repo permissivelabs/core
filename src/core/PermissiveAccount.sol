@@ -5,6 +5,7 @@ pragma solidity ^0.8.18;
 import "account-abstraction/core/BaseAccount.sol";
 import "account-abstraction/core/Helpers.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import "../interfaces/IPermissiveAccount.sol";
 import "account-abstraction/interfaces/IEntryPoint.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -69,9 +70,18 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
             (,,, PermissionLib.Permission memory permission, bytes32[] memory proof, uint256 providedFee) =
                 abi.decode(userOp.callData[4:], (address, uint256, bytes, PermissionLib.Permission, bytes32[], uint256));
             if (permission.operator.code.length > 0) {
-                validationData = _packValidationData(
-                    ValidationData(permission.operator, permission.validAfter, permission.validUntil)
-                );
+                try IERC1271(permission.operator).isValidSignature(hash, userOp.signature) returns (bytes4 magicValue) {
+                    validationData = _packValidationData(
+                        ValidationData(
+                            magicValue == IERC1271.isValidSignature.selector ? address(0) : address(1),
+                            permission.validAfter,
+                            permission.validUntil
+                        )
+                    );
+                } catch {
+                    validationData =
+                        _packValidationData(ValidationData(address(1), permission.validAfter, permission.validUntil));
+                }
             } else if (permission.operator != hash.recover(userOp.signature)) {
                 return SIG_VALIDATION_FAILED;
             } else {

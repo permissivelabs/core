@@ -14,6 +14,7 @@ import "bytes/BytesLib.sol";
 import "../../interfaces/IDataValidator.sol";
 import "../../interfaces/IPermissiveAccount.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import "@openzeppelin/contracts/interfaces/IERC1271.sol";
 
 // keccak256("PermissionSet(address operator,bytes32 merkleRootPermissions)")
 bytes32 constant typedStruct = 0xd7e1e23484f808c5620ce8d904e88d7540a3eeb37ac94e636726ed53571e4e3c;
@@ -85,9 +86,19 @@ contract PermissiveValidator is IKernelValidator, EIP712 {
         assembly {
             operatorCodeSize := extcodesize(op)
         }
-        if (operatorCodeSize > 0) {
-            validationData =
-                _packValidationData(ValidationData(permission.operator, permission.validAfter, permission.validUntil));
+        if (permission.operator.code.length > 0) {
+            try IERC1271(permission.operator).isValidSignature(hash, userOp.signature) returns (bytes4 magicValue) {
+                validationData = _packValidationData(
+                    ValidationData(
+                        magicValue == IERC1271.isValidSignature.selector ? address(0) : address(1),
+                        permission.validAfter,
+                        permission.validUntil
+                    )
+                );
+            } catch {
+                validationData =
+                    _packValidationData(ValidationData(address(1), permission.validAfter, permission.validUntil));
+            }
         } else if (permission.operator != hash.recover(userOp.signature)) {
             return 1;
         } else {

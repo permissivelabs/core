@@ -518,80 +518,75 @@ contract PermissiveAccountTest is Test {
         assert(incr.value() == 1);
     }
 
-    // function testContractSigner() external {
-    //     Aggregator contractOperator = new Aggregator();
-    //     PermissionLib.Permission memory perm = PermissionLib.Permission(
-    //         address(contractOperator),
-    //         address(token),
-    //         token.transfer.selector,
-    //         hex"f869e202a00000000000000000000000000000000000000000000000000000000000000000e202a0000000000000000000000000690b9a9e9aa1c9db991c7721a92d351db4fac990e204a00000000000000000000000000000000000000000000000056bc75e2d63100000",
-    //         address(0),
-    //         0,
-    //         0,
-    //         0,
-    //         DataValidation(address(0), address(0), hex"")
-    //     );
-    //     bytes32 root = keccak256(bytes.concat(perm.hash()));
-    //     bytes32 digest = utils.getTypedDataHash(
-    //         PermissionSet(address(contractOperator), root)
-    //     );
-    //     (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
-    //     account.setOperatorPermissions(
-    //         PermissionSet(address(contractOperator), root),
-    //         abi.encodePacked(r, s, v)
-    //     );
-    //     UserOperation memory op = UserOperation(
-    //         address(account),
-    //         account.getNonce(),
-    //         hex"",
-    //         hex"",
-    //         10000000,
-    //         10000000,
-    //         10000,
-    //         10000,
-    //         10000,
-    //         hex"",
-    //         hex""
-    //     );
-    //     uint256 computedFee = account.computeGasFee(op);
-    //     op.callData = abi.encodeWithSelector(
-    //         account.execute.selector,
-    //         address(token),
-    //         0,
-    //         abi.encodePacked(
-    //             token.transfer.selector,
-    //             hex"f863a00000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000690b9a9e9aa1c9db991c7721a92d351db4fac990a00000000000000000000000000000000000000000000000056bc75e2d630fffff"
-    //         ),
-    //         perm,
-    //         proofs,
-    //         computedFee
-    //     );
-    //     (uint8 v1, bytes32 r1, bytes32 s1) = vm.sign(
-    //         operatorPrivateKey,
-    //         entrypoint.getUserOpHash(op).toEthSignedMessageHash()
-    //     );
-    //     op.signature = abi.encodePacked(r1, s1, v1);
-    //     contractOperator.sign(op.signature);
-    //     ops.push(op);
-    //     agops.push(UserOpsPerAggregator(ops, contractOperator, hex""));
-    //     uint256 oldFeeManagerBalance = address(feeManager).balance;
-    //     payable(account).transfer((feeManager.fee() * computedFee) / 10000);
-    //     entrypoint.handleAggregatedOps(
-    //         [IEntryPoint.UserOpsPerAggregator(ops, contractOperator, hex"")],
-    //         payable(address(this))
-    //     );
-    //     assert(
-    //         (feeManager.fee() * computedFee) / 10000 ==
-    //             address(feeManager).balance - oldFeeManagerBalance
-    //     );
-    //     assert(
-    //         token.balanceOf(address(account)) == 100 ether - 0x56bc75e2d630fffff
-    //     );
-    //     assert(
-    //         token.balanceOf(0x690B9A9E9aa1C9dB991C7721a92d351Db4FaC990) ==
-    //             0x56bc75e2d630fffff
-    //     );
-    // }
+    function testContractSigner() external {
+        ContractSigner contractOperator = new ContractSigner();
+        PermissionLib.Permission memory perm = PermissionLib.Permission(
+            address(contractOperator),
+            address(token),
+            token.transfer.selector,
+            hex"f869e202a00000000000000000000000000000000000000000000000000000000000000000e202a0000000000000000000000000690b9a9e9aa1c9db991c7721a92d351db4fac990e204a00000000000000000000000000000000000000000000000056bc75e2d63100000",
+            address(0),
+            0,
+            0,
+            0,
+            DataValidation(address(0), address(0), hex"")
+        );
+        bytes32 root = keccak256(bytes.concat(perm.hash()));
+        bytes32 digest = utils.getTypedDataHash(PermissionSet(address(contractOperator), root));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
+        account.setOperatorPermissions(PermissionSet(address(contractOperator), root), abi.encodePacked(r, s, v));
+        UserOperation memory op = UserOperation(
+            address(account), account.getNonce(), hex"", hex"", 10000000, 10000000, 10000, 10000, 10000, hex"", hex""
+        );
+        uint256 computedFee = account.computeGasFee(op);
+        op.callData = abi.encodeWithSelector(
+            account.execute.selector,
+            address(token),
+            0,
+            abi.encodePacked(
+                token.transfer.selector,
+                hex"f863a00000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000690b9a9e9aa1c9db991c7721a92d351db4fac990a00000000000000000000000000000000000000000000000056bc75e2d630fffff"
+            ),
+            perm,
+            proofs,
+            computedFee
+        );
+        (uint8 v1, bytes32 r1, bytes32 s1) =
+            vm.sign(operatorPrivateKey, entrypoint.getUserOpHash(op).toEthSignedMessageHash());
+        op.signature = abi.encodePacked(r1, s1, v1);
+        ops.push(op);
+        uint256 oldFeeManagerBalance = address(feeManager).balance;
+        payable(account).transfer((feeManager.fee() * computedFee) / 10000);
+        vm.expectRevert(abi.encodeWithSelector(IEntryPoint.FailedOp.selector, 0, "AA24 signature error"));
+        entrypoint.handleOps(ops, payable(address(this)));
+        contractOperator.sign(entrypoint.getUserOpHash(op).toEthSignedMessageHash(), op.signature);
+        entrypoint.handleOps(ops, payable(address(this)));
+        assert((feeManager.fee() * computedFee) / 10000 == address(feeManager).balance - oldFeeManagerBalance);
+        assert(token.balanceOf(address(account)) == 100 ether - 0x56bc75e2d630fffff);
+        assert(token.balanceOf(0x690B9A9E9aa1C9dB991C7721a92d351Db4FaC990) == 0x56bc75e2d630fffff);
+    }
 
     receive() external payable {}
+}
+
+contract ContractSigner is IERC1271 {
+    using ECDSA for bytes32;
+
+    mapping(address => mapping(bytes32 => bytes32)) signatures;
+
+    function isValidSignature(bytes32 hash, bytes memory signature)
+        external
+        view
+        override
+        returns (bytes4 magicValue)
+    {
+        address signer = hash.recover(signature);
+        if (signatures[signer][hash] == keccak256(signature)) {
+            return IERC1271.isValidSignature.selector;
+        }
+    }
+
+    function sign(bytes32 hash, bytes memory signature) external {
+        signatures[hash.recover(signature)][hash] = keccak256(signature);
+    }
 }
