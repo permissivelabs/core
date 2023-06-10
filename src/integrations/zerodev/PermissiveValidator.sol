@@ -179,7 +179,7 @@ contract PermissiveValidator is IKernelValidator, EIP712 {
         PermissionLib.Permission memory permission,
         bytes32[] memory proof,
         bytes32 permHash
-    ) public view {
+    ) internal view {
         bool isValidProof = MerkleProof.verify(
             proof, operatorPermissions[msg.sender][permission.operator], keccak256(bytes.concat(permHash))
         );
