@@ -11,8 +11,6 @@ contract PermissiveExecutor {
     using BytesLib for bytes;
     using PermissionLib for PermissionLib.Permission;
 
-    error ExpiredPermission(uint256 current, uint256 expiredAt);
-
     event PermissionUsed(
         bytes32 indexed permHash,
         address dest,

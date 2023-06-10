@@ -7,17 +7,6 @@
 // import "../../interfaces/Permission.sol";
 
 // interface ISafeModule {
-//     error InvalidSafe(address safe);
-//     error InvalidProof();
-//     error NotAllowed(address);
-//     error InvalidTo(address provided, address expected);
-//     error ExceededValue(uint256 value, uint256 max);
-//     error OutOfPerms(bytes32 perm);
-//     error ExceededFees(uint256 fee, uint256 maxFee);
-//     error InvalidPermission();
-//     error InvalidPaymaster(address provided, address expected);
-//     error InvalidSelector(bytes4 provided, bytes4 expected);
-//     error ExpiredPermission(uint256 current, uint256 expiredAt);
 
 //     event OperatorMutated(
 //         address indexed operator,

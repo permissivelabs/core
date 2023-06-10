@@ -52,7 +52,7 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
         bytes32 digest =
             _hashTypedDataV4(keccak256(abi.encode(typedStruct, permSet.operator, permSet.merkleRootPermissions)));
         address signer = ECDSA.recover(digest, signature);
-        if (signer != owner()) revert NotAllowed(signer);
+        if (signer != owner()) revert("Not Allowed");
         bytes32 oldValue = operatorPermissions[permSet.operator];
         operatorPermissions[permSet.operator] = permSet.merkleRootPermissions;
         emit OperatorMutated(permSet.operator, oldValue, permSet.merkleRootPermissions);
@@ -68,12 +68,7 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
         if (owner() != hash.recover(userOp.signature)) {
             (,,, PermissionLib.Permission memory permission, bytes32[] memory proof, uint256 providedFee) =
                 abi.decode(userOp.callData[4:], (address, uint256, bytes, PermissionLib.Permission, bytes32[], uint256));
-            uint256 operatorCodeSize;
-            address op = permission.operator;
-            assembly {
-                operatorCodeSize := extcodesize(op)
-            }
-            if (operatorCodeSize > 0) {
+            if (permission.operator.code.length > 0) {
                 validationData = _packValidationData(
                     ValidationData(permission.operator, permission.validAfter, permission.validUntil)
                 );

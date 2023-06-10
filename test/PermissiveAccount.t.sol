@@ -395,7 +395,7 @@ contract PermissiveAccountTest is Test {
         payable(account).transfer((feeManager.fee() * computedFee) / 10000);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IEntryPoint.FailedOp.selector, 0, "AA23 reverted: msg.value not matching with provided value"
+                IEntryPoint.FailedOp.selector, 0, "AA23 reverted: msg.value not corresponding to allowed value"
             )
         );
         entrypoint.handleOps(ops, payable(address(this)));

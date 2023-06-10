@@ -2,6 +2,7 @@
 pragma solidity ^0.8.18;
 
 import "Solidity-RLP/RLPReader.sol";
+import "forge-std/console.sol";
 
 uint256 constant ANY = 0;
 uint256 constant NE = 1;
@@ -13,14 +14,21 @@ uint256 constant OR = 6;
 
 library AllowanceCalldata {
     function sliceRLPItems(RLPReader.RLPItem[] memory arguments, uint256 start)
-        internal
+        public
         pure
         returns (RLPReader.RLPItem[] memory newArguments)
     {
-        newArguments = new RLPReader.RLPItem[](arguments.length - start);
-        uint256 initialStart = start;
-        for (; start < arguments.length; start++) {
-            newArguments[start - initialStart] = arguments[start];
+        uint256 length = arguments.length - start;
+        assembly {
+            newArguments := mload(0x40)
+            mstore(0x40, add(newArguments, 0x20))
+            mstore(newArguments, length)
+            let hit := mul(add(length, 1), 0x20)
+            let memStart := add(arguments, mul(start, 0x20))
+            for { let i := 0x20 } lt(i, hit) { i := add(i, 0x20) } {
+                mstore(add(newArguments, i), mload(add(memStart, i)))
+            }
+            mstore(0x40, add(mload(0x40), mul(length, 0x20)))
         }
     }
 
@@ -28,9 +36,9 @@ library AllowanceCalldata {
         RLPReader.RLPItem[] memory allowedArguments,
         RLPReader.RLPItem[] memory arguments,
         bool isOr
-    ) internal view returns (bool canPass) {
+    ) public view returns (bool canPass) {
         if (allowedArguments.length == 0) return true;
-        for (uint256 i = 0; i < allowedArguments.length; i++) {
+        for (uint256 i = 0; i < allowedArguments.length; i = unsafe_inc(i)) {
             RLPReader.RLPItem[] memory prefixAndArg = RLPReader.toList(allowedArguments[i]);
             uint256 prefix = RLPReader.toUint(prefixAndArg[0]);
 
@@ -49,7 +57,7 @@ library AllowanceCalldata {
             } else if (prefix == OR) {
                 RLPReader.RLPItem[] memory subAllowance = RLPReader.toList(prefixAndArg[1]);
                 canPass = validateArguments(subAllowance, sliceRLPItems(arguments, i), true);
-                i++;
+                i = unsafe_inc(i);
             } else if (prefix == NE) {
                 bytes memory allowedArgument = RLPReader.toBytes(prefixAndArg[1]);
                 bytes memory argument = RLPReader.toBytes(arguments[i]);
@@ -57,7 +65,7 @@ library AllowanceCalldata {
             } else if (prefix == AND) {
                 RLPReader.RLPItem[] memory subAllowance = RLPReader.toList(prefixAndArg[1]);
                 canPass = validateArguments(subAllowance, sliceRLPItems(arguments, i), false);
-                i++;
+                i = unsafe_inc(i);
             } else {
                 revert("Invalid calldata prefix");
             }
@@ -69,7 +77,7 @@ library AllowanceCalldata {
     }
 
     function isAllowedCalldata(bytes memory allowed, bytes memory data, uint256 value)
-        internal
+        external
         view
         returns (bool isOk)
     {
@@ -81,16 +89,22 @@ library AllowanceCalldata {
             revert("Invalid arguments length");
         }
         if (value != RLPReader.toUint(arguments[0])) {
-            revert("msg.value not matching with provided value");
+            revert("msg.value not corresponding to allowed value");
         }
         isOk = validateArguments(allowedArguments, arguments, false);
     }
 
-    function RLPtoABI(bytes memory data) internal pure returns (bytes memory abiEncoded) {
+    function RLPtoABI(bytes memory data) external pure returns (bytes memory abiEncoded) {
         RLPReader.RLPItem memory RLPData = RLPReader.toRlpItem(data);
         RLPReader.RLPItem[] memory arguments = RLPReader.toList(RLPData);
-        for (uint256 i = 1; i < arguments.length; i++) {
+        for (uint256 i = 1; i < arguments.length; i = unsafe_inc(i)) {
             abiEncoded = bytes.concat(abiEncoded, RLPReader.toBytes(arguments[i]));
+        }
+    }
+
+    function unsafe_inc(uint256 i) private pure returns (uint256) {
+        unchecked {
+            return i + 1;
         }
     }
 }

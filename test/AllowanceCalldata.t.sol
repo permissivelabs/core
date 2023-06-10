@@ -3,6 +3,7 @@ pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import "../src/core/AllowanceCalldata.sol";
+import "forge-std/console.sol";
 
 contract AllowanceCalldataTest is Test {
     bytes allowanceData =
@@ -35,5 +36,12 @@ contract AllowanceCalldataTest is Test {
 
     function testValidCall() public view {
         assert(AllowanceCalldata.isAllowedCalldata(allowanceData, callData, 0) == true);
+    }
+
+    function testSliceRLPItems(uint256 _start) public {
+        RLPReader.RLPItem memory item = RLPReader.toRlpItem(allowanceData);
+        RLPReader.RLPItem[] memory args = RLPReader.toList(item);
+        if (_start > args.length) vm.expectRevert();
+        AllowanceCalldata.sliceRLPItems(args, _start);
     }
 }
