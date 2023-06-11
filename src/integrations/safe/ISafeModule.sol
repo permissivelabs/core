@@ -7,11 +7,7 @@ import "account-abstraction/interfaces/IAccount.sol";
 import "../../interfaces/Permission.sol";
 
 interface ISafeModule {
-    event OperatorMutated(
-        address indexed operator,
-        bytes32 indexed oldPermissions,
-        bytes32 indexed newPermissions
-    );
+    event OperatorMutated(address indexed operator, bytes32 indexed oldPermissions, bytes32 indexed newPermissions);
     event UserOpValidated(bytes32 indexed userOpHash, UserOperation userOp);
     event PermissionUsed(
         bytes32 indexed permHash,
