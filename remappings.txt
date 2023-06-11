@@ -1,8 +1,0 @@
-Solidity-RLP/=lib/Solidity-RLP/contracts/
-account-abstraction/=lib/account-abstraction/contracts/
-ds-test/=lib/forge-std/lib/ds-test/src/
-forge-std/=lib/forge-std/src/
-@openzeppelin/=lib/openzeppelin-contracts/
-bytes/=lib/solidity-bytes-utils/contracts/
-safe/=lib/safe-contracts/contracts/
-zerodev/=lib/zerodev-wallet-kernel/src/

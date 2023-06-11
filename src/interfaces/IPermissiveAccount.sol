@@ -5,25 +5,13 @@ pragma solidity ^0.8.18;
 import "account-abstraction/interfaces/IAccount.sol";
 import "./Permission.sol";
 
-interface IPermissiveAccount is IAccount {
-    error InvalidProof();
-    error NotAllowed(address);
-    error InvalidTo(address provided, address expected);
-    error ExceededValue(uint256 value, uint256 max);
-    error OutOfPerms(bytes32 perm);
-    error ExceededFees(uint256 fee, uint256 maxFee);
-    error InvalidPermission();
-    error InvalidPaymaster(address provided, address expected);
-    error InvalidSelector(bytes4 provided, bytes4 expected);
-    error ExpiredPermission(uint256 current, uint256 expiredAt);
+struct PermissionSet {
+    address operator;
+    bytes32 merkleRootPermissions;
+}
 
-    event OperatorMutated(
-        address indexed operator,
-        bytes32 indexed oldPermissions,
-        bytes32 indexed newPermissions,
-        uint256 maxValue,
-        uint256 maxFee
-    );
+interface IPermissiveAccount is IAccount {
+    event OperatorMutated(address indexed operator, bytes32 indexed oldPermissions, bytes32 indexed newPermissions);
     event UserOpValidated(bytes32 indexed userOpHash, UserOperation userOp);
     event PermissionUsed(
         bytes32 indexed permHash,
@@ -36,11 +24,5 @@ interface IPermissiveAccount is IAccount {
 
     function initialize(address owner) external;
 
-    function setOperatorPermissions(
-        address operator,
-        bytes32 merkleRootPermissions,
-        uint256 maxValue,
-        uint256 maxFee,
-        bytes calldata signature
-    ) external;
+    function setOperatorPermissions(PermissionSet calldata permSet, bytes calldata signature) external;
 }

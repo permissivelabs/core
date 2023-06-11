@@ -3,17 +3,14 @@
 pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/utils/Create2.sol";
-import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
+import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import "./SafeModule.sol";
 
-contract SafeFactory {
-    SafeModule public immutable moduleImplementation;
-
+contract SafeFactory is UpgradeableBeacon {
     event AccountCreated(address indexed safe, uint256 indexed salt, address indexed account);
 
-    constructor(address entrypoint, address payable feeManager) {
-        moduleImplementation = new SafeModule(entrypoint, feeManager);
-    }
+    constructor(address _impl) UpgradeableBeacon(_impl) {}
 
     function createAccount(address safe, uint256 salt) public returns (SafeModule ret) {
         address addr = getAddress(safe, salt);
@@ -23,8 +20,8 @@ contract SafeFactory {
         }
         ret = SafeModule(
             payable(
-                new ERC1967Proxy{salt: bytes32(salt)}(
-                    address(moduleImplementation),
+                new BeaconProxy{salt: bytes32(salt)}(
+                    address(this),
                     abi.encodeCall(SafeModule.setSafe, (safe))
                 )
             )
@@ -37,8 +34,8 @@ contract SafeFactory {
             bytes32(salt),
             keccak256(
                 abi.encodePacked(
-                    type(ERC1967Proxy).creationCode,
-                    abi.encode(address(moduleImplementation), abi.encodeCall(SafeModule.setSafe, (safe)))
+                    type(BeaconProxy).creationCode,
+                    abi.encode(address(this), abi.encodeCall(SafeModule.setSafe, (safe)))
                 )
             )
         );

@@ -11,8 +11,6 @@ contract PermissiveExecutor {
     using BytesLib for bytes;
     using PermissionLib for PermissionLib.Permission;
 
-    error ExpiredPermission(uint256 current, uint256 expiredAt);
-
     event PermissionUsed(
         bytes32 indexed permHash,
         address dest,
@@ -37,15 +35,6 @@ contract PermissiveExecutor {
         bytes32[] calldata,
         uint256 gasFee
     ) external {
-        if (permission.expiresAtUnix != 0) {
-            if (block.timestamp >= permission.expiresAtUnix) {
-                revert ExpiredPermission(block.timestamp, permission.expiresAtUnix);
-            }
-        } else if (permission.expiresAtBlock != 0) {
-            if (block.number >= permission.expiresAtBlock) {
-                revert ExpiredPermission(block.number, permission.expiresAtBlock);
-            }
-        }
         payable(address(feeManager)).transfer((gasFee * feeManager.fee()) / 10000);
         (bool success, bytes memory result) = dest.call{value: value}(
             bytes.concat(func.slice(0, 4), AllowanceCalldata.RLPtoABI(func.slice(4, func.length - 4)))

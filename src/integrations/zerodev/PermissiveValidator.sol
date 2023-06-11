@@ -4,22 +4,26 @@ pragma solidity ^0.8.18;
 
 import "zerodev/validator/IValidator.sol";
 import "account-abstraction/interfaces/IEntryPoint.sol";
+import "account-abstraction/core/Helpers.sol";
 import "../../core/FeeManager.sol";
 import "../../core/AllowanceCalldata.sol";
 import "../../interfaces/Permission.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "bytes/BytesLib.sol";
+import "../../interfaces/IDataValidator.sol";
+import "../../interfaces/IPermissiveAccount.sol";
+import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import "@openzeppelin/contracts/interfaces/IERC1271.sol";
+
+// keccak256("PermissionSet(address operator,bytes32 merkleRootPermissions)")
+bytes32 constant typedStruct = 0xd7e1e23484f808c5620ce8d904e88d7540a3eeb37ac94e636726ed53571e4e3c;
 
 struct PermissiveValidatorStorage {
     address owner;
-    mapping(address => uint256) remainingFeeForOperator;
-    mapping(address => uint256) remainingValueForOperator;
-    mapping(address => bytes32) operatorPermissions;
-    mapping(bytes32 => uint256) remainingPermUsage;
 }
 
-contract PermissiveValidator is IKernelValidator {
+contract PermissiveValidator is IKernelValidator, EIP712 {
     using ECDSA for bytes32;
     using BytesLib for bytes;
     using PermissionLib for PermissionLib.Permission;
@@ -29,6 +33,8 @@ contract PermissiveValidator is IKernelValidator {
     FeeManager private immutable feeManager;
     // Zerodev Validator compatible storage
     mapping(address => PermissiveValidatorStorage) permissiveValidatorStorage;
+    mapping(address => mapping(address => bytes32)) operatorPermissions;
+    mapping(address => mapping(bytes32 => uint256)) remainingPermUsage;
 
     /*
         EVENTS
@@ -38,20 +44,14 @@ contract PermissiveValidator is IKernelValidator {
     event OwnerChanged(address indexed oldOwner, address indexed owner);
 
     // Permissive
-    event OperatorMutated(
-        address indexed operator,
-        bytes32 indexed oldPermissions,
-        bytes32 indexed newPermissions,
-        uint256 maxValue,
-        uint256 maxFee
-    );
+    event OperatorMutated(address indexed operator, bytes32 indexed oldPermissions, bytes32 indexed newPermissions);
     event UserOpValidated(bytes32 indexed userOpHash, UserOperation userOp);
 
     /*
         CONSTRUCTOR
     */
 
-    constructor(address _entryPoint, address payable _feeManager) {
+    constructor(address _entryPoint, address payable _feeManager) EIP712("Permissive x Zerodev", "v0.0.4") {
         entryPoint = IEntryPoint(_entryPoint);
         feeManager = FeeManager(_feeManager);
     }
@@ -81,36 +81,50 @@ contract PermissiveValidator is IKernelValidator {
         bytes32 hash = userOpHash.toEthSignedMessageHash();
         (,,, PermissionLib.Permission memory permission, bytes32[] memory proof, uint256 providedFee) =
             abi.decode(userOp.callData[4:], (address, uint256, bytes, PermissionLib.Permission, bytes32[], uint256));
-        if (permission.operator != hash.recover(userOp.signature)) {
-            validationData = 1;
+        uint256 operatorCodeSize;
+        address op = permission.operator;
+        assembly {
+            operatorCodeSize := extcodesize(op)
+        }
+        if (permission.operator.code.length > 0) {
+            try IERC1271(permission.operator).isValidSignature(hash, userOp.signature) returns (bytes4 magicValue) {
+                validationData = _packValidationData(
+                    ValidationData(
+                        magicValue == IERC1271.isValidSignature.selector ? address(0) : address(1),
+                        permission.validAfter,
+                        permission.validUntil
+                    )
+                );
+            } catch {
+                validationData =
+                    _packValidationData(ValidationData(address(1), permission.validAfter, permission.validUntil));
+            }
+        } else if (permission.operator != hash.recover(userOp.signature)) {
+            return 1;
+        } else {
+            validationData =
+                _packValidationData(ValidationData(address(0), permission.validAfter, permission.validUntil));
         }
         bytes32 permHash = permission.hash();
         _validateMerklePermission(permission, proof, permHash);
         _validatePermission(userOp, permission, permHash);
+        _validateData(permission);
         uint256 gasFee = computeGasFee(userOp);
         if (providedFee != gasFee) revert("Invalid provided fee");
-        if (gasFee > permissiveValidatorStorage[msg.sender].remainingFeeForOperator[permission.operator]) {
-            revert("Exceeded Fees");
-        }
-        permissiveValidatorStorage[msg.sender].remainingFeeForOperator[permission.operator] -= gasFee;
         emit UserOpValidated(userOpHash, userOp);
     }
 
-    function validateSignature(bytes32 hash, bytes calldata signature) external view override returns (uint256) {
-        address owner = permissiveValidatorStorage[msg.sender].owner;
-        return owner == ECDSA.recover(hash, signature) ? 0 : 1;
-    }
+    function validateSignature(bytes32 hash, bytes calldata signature) external view override returns (uint256) {}
 
     // Permissive
 
-    function setOperatorPermissions(address operator, bytes32 merkleRootPermissions, uint256 maxValue, uint256 maxFee)
-        external
-    {
-        bytes32 oldValue = permissiveValidatorStorage[msg.sender].operatorPermissions[operator];
-        permissiveValidatorStorage[msg.sender].operatorPermissions[operator] = merkleRootPermissions;
-        permissiveValidatorStorage[msg.sender].remainingFeeForOperator[operator] = maxFee;
-        permissiveValidatorStorage[msg.sender].remainingValueForOperator[operator] = maxValue;
-        emit OperatorMutated(operator, oldValue, merkleRootPermissions, maxValue, maxFee);
+    function setOperatorPermissions(PermissionSet calldata permSet, bytes calldata signature) external {
+        bytes32 digest =
+            _hashTypedDataV4(keccak256(abi.encode(typedStruct, permSet.operator, permSet.merkleRootPermissions)));
+        address signer = ECDSA.recover(digest, signature);
+        bytes32 oldValue = operatorPermissions[signer][permSet.operator];
+        operatorPermissions[signer][permSet.operator] = permSet.merkleRootPermissions;
+        emit OperatorMutated(permSet.operator, oldValue, permSet.merkleRootPermissions);
     }
 
     function computeGasFee(UserOperation memory userOp) public pure returns (uint256 fee) {
@@ -122,9 +136,20 @@ contract PermissiveValidator is IKernelValidator {
         }
     }
 
-    /* 
-        INTERNAL 
+    /*
+        INTERNAL
     */
+
+    function _validateData(PermissionLib.Permission memory permission) internal view {
+        if (
+            permission.dataValidation.validator != address(0)
+                && !IDataValidator(permission.dataValidation.validator).isValidData(
+                    permission.dataValidation.target, permission.dataValidation.data
+                )
+        ) {
+            revert("Invalid data");
+        }
+    }
 
     function _validatePermission(
         UserOperation calldata userOp,
@@ -134,29 +159,23 @@ contract PermissiveValidator is IKernelValidator {
         (address to, uint256 value, bytes memory callData,,) =
             abi.decode(userOp.callData[4:], (address, uint256, bytes, PermissionLib.Permission, bytes32[]));
         if (permission.to != to) revert("InvalidTo");
-        if (permissiveValidatorStorage[msg.sender].remainingValueForOperator[permission.operator] < value) {
-            revert("ExceededValue");
-        }
-        permissiveValidatorStorage[msg.sender].remainingValueForOperator[permission.operator] -= value;
         if (permission.maxUsage > 0) {
             if (permission.maxUsage == 1) revert("OutOfPerms");
-            if (permissiveValidatorStorage[msg.sender].remainingPermUsage[permission.hash()] == 1) {
+            if (remainingPermUsage[msg.sender][permission.hash()] == 1) {
                 revert("OutOfPerms2");
             }
-            if (permissiveValidatorStorage[msg.sender].remainingPermUsage[permHash] == 0) {
-                permissiveValidatorStorage[msg.sender].remainingPermUsage[permHash] = permission.maxUsage;
+            if (remainingPermUsage[msg.sender][permHash] == 0) {
+                remainingPermUsage[msg.sender][permHash] = permission.maxUsage;
             }
-            permissiveValidatorStorage[msg.sender].remainingPermUsage[permHash]--;
+            remainingPermUsage[msg.sender][permHash]--;
         }
         require(
-            AllowanceCalldata.isAllowedCalldata(permission.allowed_arguments, callData.slice(4, callData.length - 4))
-                == true,
+            AllowanceCalldata.isAllowedCalldata(
+                permission.allowed_arguments, callData.slice(4, callData.length - 4), value
+            ) == true,
             "Not allowed Calldata"
         );
         if (permission.selector != bytes4(callData)) revert("InvalidSelector");
-        if (permission.expiresAtUnix != 0 && permission.expiresAtBlock != 0) {
-            revert("InvalidPermission");
-        }
         if (permission.paymaster != address(0)) {
             address paymaster = address(0);
             assembly {
@@ -171,12 +190,14 @@ contract PermissiveValidator is IKernelValidator {
         PermissionLib.Permission memory permission,
         bytes32[] memory proof,
         bytes32 permHash
-    ) public view {
+    ) internal view {
         bool isValidProof = MerkleProof.verify(
-            proof,
-            permissiveValidatorStorage[msg.sender].operatorPermissions[permission.operator],
-            keccak256(bytes.concat(permHash))
+            proof, operatorPermissions[msg.sender][permission.operator], keccak256(bytes.concat(permHash))
         );
         if (!isValidProof) revert("Invalid Proof");
+    }
+
+    function _hashTypedDataV4(bytes32 structHash) internal view virtual override returns (bytes32) {
+        return ECDSA.toTypedDataHash(_domainSeparatorV4(), structHash);
     }
 }

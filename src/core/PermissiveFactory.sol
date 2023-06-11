@@ -3,19 +3,15 @@
 pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/utils/Create2.sol";
-import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
+import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import "./PermissiveAccount.sol";
 import "./FeeManager.sol";
-import "account-abstraction/interfaces/IEntryPoint.sol";
 
-contract PermissiveFactory {
-    PermissiveAccount public immutable accountImplementation;
-
+contract PermissiveFactory is UpgradeableBeacon {
     event AccountCreated(address indexed owner, uint256 indexed salt, address indexed account);
 
-    constructor(address entrypoint, address payable feeManager) {
-        accountImplementation = new PermissiveAccount(entrypoint, feeManager);
-    }
+    constructor(address _impl) UpgradeableBeacon(_impl) {}
 
     function createAccount(address owner, uint256 salt) public returns (PermissiveAccount ret) {
         address addr = getAddress(owner, salt);
@@ -25,8 +21,8 @@ contract PermissiveFactory {
         }
         ret = PermissiveAccount(
             payable(
-                new ERC1967Proxy{salt: bytes32(salt)}(
-                    address(accountImplementation),
+                new BeaconProxy{salt: bytes32(salt)}(
+                    address(this),
                     abi.encodeCall(PermissiveAccount.initialize, (owner))
                 )
             )
@@ -39,8 +35,8 @@ contract PermissiveFactory {
             bytes32(salt),
             keccak256(
                 abi.encodePacked(
-                    type(ERC1967Proxy).creationCode,
-                    abi.encode(address(accountImplementation), abi.encodeCall(PermissiveAccount.initialize, (owner)))
+                    type(BeaconProxy).creationCode,
+                    abi.encode(address(this), abi.encodeCall(PermissiveAccount.initialize, (owner)))
                 )
             )
         );

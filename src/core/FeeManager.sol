@@ -5,7 +5,7 @@ pragma solidity ^0.8.18;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract FeeManager is Ownable {
-    uint256 public fee = 2000;
+    uint24 public fee = 2000;
     bool initialized;
 
     event FeePaid(address indexed from, uint256 amount);
@@ -16,11 +16,13 @@ contract FeeManager is Ownable {
         initialized = true;
     }
 
-    function setFee(uint256 _fee) external onlyOwner {
+    function setFee(uint24 _fee) external {
+        _checkOwner();
         fee = _fee;
     }
 
-    function withdraw() external onlyOwner {
+    function withdraw() external {
+        _checkOwner();
         payable(msg.sender).transfer(address(this).balance);
     }
 
