@@ -77,7 +77,7 @@ library AllowanceCalldata {
     }
 
     function isAllowedCalldata(bytes memory allowed, bytes memory data, uint256 value)
-        external
+        internal
         view
         returns (bool isOk)
     {
@@ -94,7 +94,7 @@ library AllowanceCalldata {
         isOk = validateArguments(allowedArguments, arguments, false);
     }
 
-    function RLPtoABI(bytes memory data) external pure returns (bytes memory abiEncoded) {
+    function RLPtoABI(bytes memory data) internal pure returns (bytes memory abiEncoded) {
         RLPReader.RLPItem memory RLPData = RLPReader.toRlpItem(data);
         RLPReader.RLPItem[] memory arguments = RLPReader.toList(RLPData);
         for (uint256 i = 1; i < arguments.length; i = unsafe_inc(i)) {

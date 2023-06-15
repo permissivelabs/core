@@ -35,18 +35,6 @@ library PermissionLib {
     }
 
     function hash(Permission memory permission) internal pure returns (bytes32 permHash) {
-        permHash = keccak256(
-            abi.encode(
-                permission.operator,
-                permission.to,
-                permission.selector,
-                permission.allowed_arguments,
-                permission.paymaster,
-                permission.validUntil,
-                permission.validAfter,
-                permission.maxUsage,
-                permission.dataValidation
-            )
-        );
+        permHash = keccak256(abi.encode(permission));
     }
 }
