@@ -16,10 +16,11 @@ contract DeployScript is Script {
         vm.startBroadcast(deployerPrivateKey);
         FeeManager feeManager = new FeeManager{salt: versionSalt}();
         feeManager.initialize(vm.envAddress("OWNER"));
-        PermissiveFactory factory = new PermissiveFactory{salt: versionSalt}(
+        PermissiveAccount impl = new PermissiveAccount{salt: versionSalt}(
             entrypoint,
             payable(address(feeManager))
         );
+        new PermissiveFactory{salt: versionSalt}(address(impl));
         vm.stopBroadcast();
     }
 }
