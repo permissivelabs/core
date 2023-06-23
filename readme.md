@@ -4,11 +4,11 @@
 
 ### PermissiveFactory
 
-`0xe24401ca5a629477125f2ac96424b71c8729d5f1`
+`0x825762ccb52fefc37f6d702d83d42f0c571a3836`
 
 ### PermissiveAccount
 
-`0x41ab958feee4b339f5d41ceb4589089b615dd6fa`
+`0xf0afdb27fc4579d1de23170c265a579c38f1c7c4`
 
 ### FeeManager
 
