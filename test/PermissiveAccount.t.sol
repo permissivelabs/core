@@ -11,8 +11,8 @@ import "../lib/account-abstraction/contracts/core/EntryPoint.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "./mock/Aggregator.sol";
 import "account-abstraction/interfaces/IEntryPoint.sol";
-import "./mock/DataValidator.sol";
 import "@openzeppelin/contracts/token/ERC721/presets/ERC721PresetMinterPauserAutoId.sol";
+import "./mock/ERC20Limiter.sol";
 
 address constant receiver = 0x690B9A9E9aa1C9dB991C7721a92d351Db4FaC990;
 
@@ -25,15 +25,28 @@ struct UserOpsPerAggregator {
 }
 
 library DomainSeparatorUtils {
-    function buildDomainSeparator(bytes32 typeHash, bytes32 nameHash, bytes32 versionHash, address target)
-        public
-        view
-        returns (bytes32)
-    {
-        return keccak256(abi.encode(typeHash, nameHash, versionHash, block.chainid, target));
+    function buildDomainSeparator(
+        bytes32 typeHash,
+        bytes32 nameHash,
+        bytes32 versionHash,
+        address target
+    ) public view returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    typeHash,
+                    nameHash,
+                    versionHash,
+                    block.chainid,
+                    target
+                )
+            );
     }
 
-    function efficientHash(bytes32 a, bytes32 b) public pure returns (bytes32 value) {
+    function efficientHash(
+        bytes32 a,
+        bytes32 b
+    ) public pure returns (bytes32 value) {
         /// @solidity memory-safe-assembly
         assembly {
             mstore(0x00, a)
@@ -50,14 +63,33 @@ contract SigUtils {
         DOMAIN_SEPARATOR = _DOMAIN_SEPARATOR;
     }
 
-    bytes32 public constant TYPEHASH = 0xd7e1e23484f808c5620ce8d904e88d7540a3eeb37ac94e636726ed53571e4e3c;
+    bytes32 public constant TYPEHASH =
+        0xd7e1e23484f808c5620ce8d904e88d7540a3eeb37ac94e636726ed53571e4e3c;
 
-    function getStructHash(PermissionSet memory _permit) internal pure returns (bytes32) {
-        return keccak256(abi.encode(TYPEHASH, _permit.operator, _permit.merkleRootPermissions));
+    function getStructHash(
+        PermissionSet memory _permit
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    TYPEHASH,
+                    _permit.operator,
+                    _permit.merkleRootPermissions
+                )
+            );
     }
 
-    function getTypedDataHash(PermissionSet memory _permit) public view returns (bytes32) {
-        return keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, getStructHash(_permit)));
+    function getTypedDataHash(
+        PermissionSet memory _permit
+    ) public view returns (bytes32) {
+        return
+            keccak256(
+                abi.encodePacked(
+                    "\x19\x01",
+                    DOMAIN_SEPARATOR,
+                    getStructHash(_permit)
+                )
+            );
     }
 }
 
@@ -73,13 +105,16 @@ contract PermissiveAccountTest is Test {
     UserOperation[] internal ops;
     UserOpsPerAggregator[] internal agops;
     address internal owner = 0xa8b802B27FB4FAD58Ed28Cb6F4Ae5061bD432e8c;
-    uint256 internal ownerPrivateKey = 0x18104766cc86e7fb8a7452ac9fb2bccc465a88a9bba2d2d67a5ffd3f459f820f;
+    uint256 internal ownerPrivateKey =
+        0x18104766cc86e7fb8a7452ac9fb2bccc465a88a9bba2d2d67a5ffd3f459f820f;
     address internal operator = 0xabe1DE8764303a2d4421Ea583ef693CF6cAc109A;
-    uint256 internal operatorPrivateKey = 0x19ef7c79dbd4115a8df3d576ea6e75362d661def86250fd3ef4557a285359776;
+    uint256 internal operatorPrivateKey =
+        0x19ef7c79dbd4115a8df3d576ea6e75362d661def86250fd3ef4557a285359776;
     bytes32[] internal proofs;
     uint256[] internal numbers;
     FeeManager internal feeManager;
     SigUtils internal utils;
+    Limit[] internal limits;
 
     function setUp() public {
         entrypoint = new EntryPoint{salt: bytes32("Permissive-v0.0.4")}();
@@ -91,7 +126,10 @@ contract PermissiveAccountTest is Test {
         factory = new PermissiveFactory{salt: bytes32("Permissive-v0.0.4")}(
             address(impl)
         );
-        account = factory.createAccount(owner, 0x000000000000000000000000a8b802b27fb4fad58ed28cb6f4ae5061bd432e8c);
+        account = factory.createAccount(
+            owner,
+            0x000000000000000000000000a8b802b27fb4fad58ed28cb6f4ae5061bd432e8c
+        );
         token = new Token("USD Coin", "USDC");
         token.mint();
         token.transfer(address(account), 100 ether);
@@ -105,7 +143,7 @@ contract PermissiveAccountTest is Test {
             0,
             0,
             0,
-            DataValidation(address(0), address(0), hex"")
+            address(0)
         );
         permissions.push(perm);
         utils = new SigUtils(
@@ -124,14 +162,27 @@ contract PermissiveAccountTest is Test {
         bytes32 root = keccak256(bytes.concat(permissions[0].hash()));
         bytes32 digest = utils.getTypedDataHash(PermissionSet(operator, root));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
-        account.setOperatorPermissions(PermissionSet(operator, root), abi.encodePacked(r, s, v));
+        account.setOperatorPermissions(
+            PermissionSet(operator, root),
+            abi.encodePacked(r, s, v)
+        );
         assert(account.operatorPermissions(operator) == root);
     }
 
     function testTransactionPasses() public {
         testPermissionsGranted();
         UserOperation memory op = UserOperation(
-            address(account), account.getNonce(), hex"", hex"", 10000000, 10000000, 10000, 10000, 10000, hex"", hex""
+            address(account),
+            account.getNonce(),
+            hex"",
+            hex"",
+            10000000,
+            10000000,
+            10000,
+            10000,
+            10000,
+            hex"",
+            hex""
         );
         uint256 computedFee = account.computeGasFee(op);
         op.callData = abi.encodeWithSelector(
@@ -146,16 +197,26 @@ contract PermissiveAccountTest is Test {
             proofs,
             computedFee
         );
-        (uint8 v, bytes32 r, bytes32 s) =
-            vm.sign(operatorPrivateKey, entrypoint.getUserOpHash(op).toEthSignedMessageHash());
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+            operatorPrivateKey,
+            entrypoint.getUserOpHash(op).toEthSignedMessageHash()
+        );
         op.signature = abi.encodePacked(r, s, v);
         ops.push(op);
         uint256 oldFeeManagerBalance = address(feeManager).balance;
         payable(account).transfer((feeManager.fee() * computedFee) / 10000);
         entrypoint.handleOps(ops, payable(address(this)));
-        assert((feeManager.fee() * computedFee) / 10000 == address(feeManager).balance - oldFeeManagerBalance);
-        assert(token.balanceOf(address(account)) == 100 ether - 0x56bc75e2d630fffff);
-        assert(token.balanceOf(0x690B9A9E9aa1C9dB991C7721a92d351Db4FaC990) == 0x56bc75e2d630fffff);
+        assert(
+            (feeManager.fee() * computedFee) / 10000 ==
+                address(feeManager).balance - oldFeeManagerBalance
+        );
+        assert(
+            token.balanceOf(address(account)) == 100 ether - 0x56bc75e2d630fffff
+        );
+        assert(
+            token.balanceOf(0x690B9A9E9aa1C9dB991C7721a92d351Db4FaC990) ==
+                0x56bc75e2d630fffff
+        );
     }
 
     function testNoArgs() external {
@@ -170,7 +231,7 @@ contract PermissiveAccountTest is Test {
             0,
             0,
             0,
-            DataValidation(address(0), address(0), hex"")
+            address(0)
         );
         ops.pop();
         permissions.pop();
@@ -178,7 +239,10 @@ contract PermissiveAccountTest is Test {
         bytes32 root = keccak256(bytes.concat(perm.hash()));
         bytes32 digest = utils.getTypedDataHash(PermissionSet(operator, root));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
-        account.setOperatorPermissions(PermissionSet(operator, root), abi.encodePacked(r, s, v));
+        account.setOperatorPermissions(
+            PermissionSet(operator, root),
+            abi.encodePacked(r, s, v)
+        );
         UserOperation memory op = UserOperation(
             address(account),
             account.getNonce(),
@@ -188,7 +252,8 @@ contract PermissiveAccountTest is Test {
                 address(incr),
                 0,
                 abi.encodePacked(
-                    incr.increment.selector, hex"e1a00000000000000000000000000000000000000000000000000000000000000000"
+                    incr.increment.selector,
+                    hex"e1a00000000000000000000000000000000000000000000000000000000000000000"
                 ),
                 permissions[0],
                 proofs
@@ -207,14 +272,17 @@ contract PermissiveAccountTest is Test {
             address(incr),
             0,
             abi.encodePacked(
-                incr.increment.selector, hex"e1a00000000000000000000000000000000000000000000000000000000000000000"
+                incr.increment.selector,
+                hex"e1a00000000000000000000000000000000000000000000000000000000000000000"
             ),
             permissions[0],
             proofs,
             computedFee
         );
-        (uint8 v2, bytes32 r2, bytes32 s2) =
-            vm.sign(operatorPrivateKey, entrypoint.getUserOpHash(op).toEthSignedMessageHash());
+        (uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(
+            operatorPrivateKey,
+            entrypoint.getUserOpHash(op).toEthSignedMessageHash()
+        );
         op.signature = abi.encodePacked(r2, s2, v2);
         ops.push(op);
         payable(account).transfer((feeManager.fee() * computedFee) / 10000);
@@ -233,14 +301,17 @@ contract PermissiveAccountTest is Test {
             100, // valid until 100
             0,
             0,
-            DataValidation(address(0), address(0), hex"")
+            address(0)
         );
         permissions.pop();
         permissions.push(perm);
         bytes32 root = keccak256(bytes.concat(perm.hash()));
         bytes32 digest = utils.getTypedDataHash(PermissionSet(operator, root));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
-        account.setOperatorPermissions(PermissionSet(operator, root), abi.encodePacked(r, s, v));
+        account.setOperatorPermissions(
+            PermissionSet(operator, root),
+            abi.encodePacked(r, s, v)
+        );
         UserOperation memory op = UserOperation(
             address(account),
             account.getNonce(),
@@ -250,7 +321,8 @@ contract PermissiveAccountTest is Test {
                 address(incr),
                 0,
                 abi.encodePacked(
-                    incr.increment.selector, hex"e1a00000000000000000000000000000000000000000000000000000000000000000"
+                    incr.increment.selector,
+                    hex"e1a00000000000000000000000000000000000000000000000000000000000000000"
                 ),
                 permissions[0],
                 proofs
@@ -269,19 +341,28 @@ contract PermissiveAccountTest is Test {
             address(incr),
             0,
             abi.encodePacked(
-                incr.increment.selector, hex"e1a00000000000000000000000000000000000000000000000000000000000000000"
+                incr.increment.selector,
+                hex"e1a00000000000000000000000000000000000000000000000000000000000000000"
             ),
             permissions[0],
             proofs,
             computedFee
         );
-        (uint8 v2, bytes32 r2, bytes32 s2) =
-            vm.sign(operatorPrivateKey, entrypoint.getUserOpHash(op).toEthSignedMessageHash());
+        (uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(
+            operatorPrivateKey,
+            entrypoint.getUserOpHash(op).toEthSignedMessageHash()
+        );
         op.signature = abi.encodePacked(r2, s2, v2);
         ops.push(op);
         payable(account).transfer((feeManager.fee() * computedFee) / 10000);
         vm.warp(101);
-        vm.expectRevert(abi.encodeWithSelector(IEntryPoint.FailedOp.selector, 0, "AA22 expired or not due"));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEntryPoint.FailedOp.selector,
+                0,
+                "AA22 expired or not due"
+            )
+        );
         entrypoint.handleOps(ops, payable(address(this)));
         vm.warp(100);
         entrypoint.handleOps(ops, payable(address(this)));
@@ -299,14 +380,17 @@ contract PermissiveAccountTest is Test {
             0,
             100, // valid after 100
             0,
-            DataValidation(address(0), address(0), hex"")
+            address(0)
         );
         permissions.pop();
         permissions.push(perm);
         bytes32 root = keccak256(bytes.concat(perm.hash()));
         bytes32 digest = utils.getTypedDataHash(PermissionSet(operator, root));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
-        account.setOperatorPermissions(PermissionSet(operator, root), abi.encodePacked(r, s, v));
+        account.setOperatorPermissions(
+            PermissionSet(operator, root),
+            abi.encodePacked(r, s, v)
+        );
         UserOperation memory op = UserOperation(
             address(account),
             account.getNonce(),
@@ -316,7 +400,8 @@ contract PermissiveAccountTest is Test {
                 address(incr),
                 0,
                 abi.encodePacked(
-                    incr.increment.selector, hex"e1a00000000000000000000000000000000000000000000000000000000000000000"
+                    incr.increment.selector,
+                    hex"e1a00000000000000000000000000000000000000000000000000000000000000000"
                 ),
                 permissions[0],
                 proofs
@@ -335,19 +420,28 @@ contract PermissiveAccountTest is Test {
             address(incr),
             0,
             abi.encodePacked(
-                incr.increment.selector, hex"e1a00000000000000000000000000000000000000000000000000000000000000000"
+                incr.increment.selector,
+                hex"e1a00000000000000000000000000000000000000000000000000000000000000000"
             ),
             permissions[0],
             proofs,
             computedFee
         );
-        (uint8 v2, bytes32 r2, bytes32 s2) =
-            vm.sign(operatorPrivateKey, entrypoint.getUserOpHash(op).toEthSignedMessageHash());
+        (uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(
+            operatorPrivateKey,
+            entrypoint.getUserOpHash(op).toEthSignedMessageHash()
+        );
         op.signature = abi.encodePacked(r2, s2, v2);
         ops.push(op);
         payable(account).transfer((feeManager.fee() * computedFee) / 10000);
         vm.warp(99);
-        vm.expectRevert(abi.encodeWithSelector(IEntryPoint.FailedOp.selector, 0, "AA22 expired or not due"));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEntryPoint.FailedOp.selector,
+                0,
+                "AA22 expired or not due"
+            )
+        );
         entrypoint.handleOps(ops, payable(address(this)));
         vm.warp(100);
         entrypoint.handleOps(ops, payable(address(this)));
@@ -365,16 +459,29 @@ contract PermissiveAccountTest is Test {
             0,
             0,
             0,
-            DataValidation(address(0), address(0), hex"")
+            address(0)
         );
         permissions.pop();
         permissions.push(perm);
         bytes32 root = keccak256(bytes.concat(perm.hash()));
         bytes32 digest = utils.getTypedDataHash(PermissionSet(operator, root));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
-        account.setOperatorPermissions(PermissionSet(operator, root), abi.encodePacked(r, s, v));
+        account.setOperatorPermissions(
+            PermissionSet(operator, root),
+            abi.encodePacked(r, s, v)
+        );
         UserOperation memory op = UserOperation(
-            address(account), account.getNonce(), hex"", hex"", 10000000, 10000000, 10000, 10000, 10000, hex"", hex""
+            address(account),
+            account.getNonce(),
+            hex"",
+            hex"",
+            10000000,
+            10000000,
+            10000,
+            10000,
+            10000,
+            hex"",
+            hex""
         );
         uint256 computedFee = account.computeGasFee(op);
         op.callData = abi.encodeWithSelector(
@@ -382,20 +489,25 @@ contract PermissiveAccountTest is Test {
             address(incr),
             0,
             abi.encodePacked(
-                incr.increment.selector, hex"e1a00000000000000000000000000000000000000000000000000000000000000001"
+                incr.increment.selector,
+                hex"e1a00000000000000000000000000000000000000000000000000000000000000001"
             ),
             permissions[0],
             proofs,
             computedFee
         );
-        (uint8 v2, bytes32 r2, bytes32 s2) =
-            vm.sign(operatorPrivateKey, entrypoint.getUserOpHash(op).toEthSignedMessageHash());
+        (uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(
+            operatorPrivateKey,
+            entrypoint.getUserOpHash(op).toEthSignedMessageHash()
+        );
         op.signature = abi.encodePacked(r2, s2, v2);
         ops.push(op);
         payable(account).transfer((feeManager.fee() * computedFee) / 10000);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IEntryPoint.FailedOp.selector, 0, "AA23 reverted: msg.value not corresponding to allowed value"
+                IEntryPoint.FailedOp.selector,
+                0,
+                "AA23 reverted: msg.value not corresponding to allowed value"
             )
         );
         entrypoint.handleOps(ops, payable(address(this)));
@@ -405,117 +517,86 @@ contract PermissiveAccountTest is Test {
             address(incr),
             0,
             abi.encodePacked(
-                incr.increment.selector, hex"e1a00000000000000000000000000000000000000000000000000000000000000000"
+                incr.increment.selector,
+                hex"e1a00000000000000000000000000000000000000000000000000000000000000000"
             ),
             permissions[0],
             proofs,
             computedFee
         );
-        (uint8 v3, bytes32 r3, bytes32 s3) =
-            vm.sign(operatorPrivateKey, entrypoint.getUserOpHash(op).toEthSignedMessageHash());
+        (uint8 v3, bytes32 r3, bytes32 s3) = vm.sign(
+            operatorPrivateKey,
+            entrypoint.getUserOpHash(op).toEthSignedMessageHash()
+        );
         op.signature = abi.encodePacked(r3, s3, v3);
         ops.push(op);
         entrypoint.handleOps(ops, payable(address(this)));
         assert(incr.value() == 1);
     }
 
-    function testBlokchainDataValidationFailsBecauseInvalidTarget() external {
-        ERC721 nft = new ERC721("Bored Ape Yatch Club", "BAYC");
-        DataValidator validator = new DataValidator(nft);
-        Incrementer incr = new Incrementer();
+    function testLimiter() external {
+        token.mint();
+        token.transfer(address(account), 100 ether);
+        ERC20Limiter limiter = new ERC20Limiter();
+        limits.push(Limit(address(token), 50 ether));
+        vm.prank(address(account));
+        limiter.setLimits(limits);
         PermissionLib.Permission memory perm = PermissionLib.Permission(
             operator,
-            address(incr),
-            incr.increment.selector,
-            hex"e3e202a00000000000000000000000000000000000000000000000000000000000000000",
+            address(token),
+            token.transfer.selector,
+            hex"e7e202a00000000000000000000000000000000000000000000000000000000000000000c100c100",
             address(0),
             0,
             0,
             0,
-            DataValidation(address(validator), address(0), abi.encode(address(account), 0))
+            address(limiter)
         );
         permissions.pop();
         permissions.push(perm);
         bytes32 root = keccak256(bytes.concat(perm.hash()));
         bytes32 digest = utils.getTypedDataHash(PermissionSet(operator, root));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
-        account.setOperatorPermissions(PermissionSet(operator, root), abi.encodePacked(r, s, v));
+        account.setOperatorPermissions(
+            PermissionSet(operator, root),
+            abi.encodePacked(r, s, v)
+        );
         UserOperation memory op = UserOperation(
-            address(account), account.getNonce(), hex"", hex"", 10000000, 10000000, 10000, 10000, 10000, hex"", hex""
+            address(account),
+            account.getNonce(),
+            hex"",
+            hex"",
+            10000000,
+            10000000,
+            10000,
+            10000,
+            10000,
+            hex"",
+            hex""
         );
         uint256 computedFee = account.computeGasFee(op);
         op.callData = abi.encodeWithSelector(
             account.execute.selector,
-            address(incr),
+            address(token),
             0,
             abi.encodePacked(
-                incr.increment.selector, hex"e1a00000000000000000000000000000000000000000000000000000000000000000"
+                token.transfer.selector,
+                hex"f863a00000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000001a0000000000000000000000000000000000000000000000002b5e3af16b1880000"
             ),
             permissions[0],
             proofs,
             computedFee
         );
-        (uint8 v2, bytes32 r2, bytes32 s2) =
-            vm.sign(operatorPrivateKey, entrypoint.getUserOpHash(op).toEthSignedMessageHash());
+        (uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(
+            operatorPrivateKey,
+            entrypoint.getUserOpHash(op).toEthSignedMessageHash()
+        );
         op.signature = abi.encodePacked(r2, s2, v2);
         ops.push(op);
         payable(account).transfer((feeManager.fee() * computedFee) / 10000);
-        vm.expectRevert(abi.encodeWithSelector(IEntryPoint.FailedOp.selector, 0, "AA23 reverted: Invalid data"));
         entrypoint.handleOps(ops, payable(address(this)));
-    }
-
-    function testBlokchainDataValidationFailsBecauseInvalidState() external {
-        ERC721PresetMinterPauserAutoId nft = new ERC721PresetMinterPauserAutoId(
-            "Bored Ape Yatch Club",
-            "BAYC",
-            ""
-        );
-        DataValidator validator = new DataValidator(nft);
-        Incrementer incr = new Incrementer();
-        PermissionLib.Permission memory perm = PermissionLib.Permission(
-            operator,
-            address(incr),
-            incr.increment.selector,
-            hex"e3e202a00000000000000000000000000000000000000000000000000000000000000000",
-            address(0),
-            0,
-            0,
-            0,
-            DataValidation(address(validator), address(nft), abi.encode(address(account), 0))
-        );
-        permissions.pop();
-        permissions.push(perm);
-        bytes32 root = keccak256(bytes.concat(perm.hash()));
-        bytes32 digest = utils.getTypedDataHash(PermissionSet(operator, root));
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
-        account.setOperatorPermissions(PermissionSet(operator, root), abi.encodePacked(r, s, v));
-        UserOperation memory op = UserOperation(
-            address(account), account.getNonce(), hex"", hex"", 10000000, 10000000, 10000, 10000, 10000, hex"", hex""
-        );
-        uint256 computedFee = account.computeGasFee(op);
-        op.callData = abi.encodeWithSelector(
-            account.execute.selector,
-            address(incr),
-            0,
-            abi.encodePacked(
-                incr.increment.selector, hex"e1a00000000000000000000000000000000000000000000000000000000000000000"
-            ),
-            permissions[0],
-            proofs,
-            computedFee
-        );
-        (uint8 v2, bytes32 r2, bytes32 s2) =
-            vm.sign(operatorPrivateKey, entrypoint.getUserOpHash(op).toEthSignedMessageHash());
-        op.signature = abi.encodePacked(r2, s2, v2);
-        ops.push(op);
-        payable(account).transfer((feeManager.fee() * computedFee) / 10000);
-        vm.expectRevert(
-            abi.encodeWithSelector(IEntryPoint.FailedOp.selector, 0, "AA23 reverted: ERC721: invalid token ID")
-        );
-        entrypoint.handleOps(ops, payable(address(this)));
-        nft.mint(address(account));
-        entrypoint.handleOps(ops, payable(address(this)));
-        assert(incr.value() == 1);
+        ops.pop();
+        assert(token.balanceOf(address(1)) == 50 ether);
     }
 
     function testContractSigner() external {
@@ -529,14 +610,29 @@ contract PermissiveAccountTest is Test {
             0,
             0,
             0,
-            DataValidation(address(0), address(0), hex"")
+            address(0)
         );
         bytes32 root = keccak256(bytes.concat(perm.hash()));
-        bytes32 digest = utils.getTypedDataHash(PermissionSet(address(contractOperator), root));
+        bytes32 digest = utils.getTypedDataHash(
+            PermissionSet(address(contractOperator), root)
+        );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
-        account.setOperatorPermissions(PermissionSet(address(contractOperator), root), abi.encodePacked(r, s, v));
+        account.setOperatorPermissions(
+            PermissionSet(address(contractOperator), root),
+            abi.encodePacked(r, s, v)
+        );
         UserOperation memory op = UserOperation(
-            address(account), account.getNonce(), hex"", hex"", 10000000, 10000000, 10000, 10000, 10000, hex"", hex""
+            address(account),
+            account.getNonce(),
+            hex"",
+            hex"",
+            10000000,
+            10000000,
+            10000,
+            10000,
+            10000,
+            hex"",
+            hex""
         );
         uint256 computedFee = account.computeGasFee(op);
         op.callData = abi.encodeWithSelector(
@@ -551,19 +647,38 @@ contract PermissiveAccountTest is Test {
             proofs,
             computedFee
         );
-        (uint8 v1, bytes32 r1, bytes32 s1) =
-            vm.sign(operatorPrivateKey, entrypoint.getUserOpHash(op).toEthSignedMessageHash());
+        (uint8 v1, bytes32 r1, bytes32 s1) = vm.sign(
+            operatorPrivateKey,
+            entrypoint.getUserOpHash(op).toEthSignedMessageHash()
+        );
         op.signature = abi.encodePacked(r1, s1, v1);
         ops.push(op);
         uint256 oldFeeManagerBalance = address(feeManager).balance;
         payable(account).transfer((feeManager.fee() * computedFee) / 10000);
-        vm.expectRevert(abi.encodeWithSelector(IEntryPoint.FailedOp.selector, 0, "AA24 signature error"));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEntryPoint.FailedOp.selector,
+                0,
+                "AA24 signature error"
+            )
+        );
         entrypoint.handleOps(ops, payable(address(this)));
-        contractOperator.sign(entrypoint.getUserOpHash(op).toEthSignedMessageHash(), op.signature);
+        contractOperator.sign(
+            entrypoint.getUserOpHash(op).toEthSignedMessageHash(),
+            op.signature
+        );
         entrypoint.handleOps(ops, payable(address(this)));
-        assert((feeManager.fee() * computedFee) / 10000 == address(feeManager).balance - oldFeeManagerBalance);
-        assert(token.balanceOf(address(account)) == 100 ether - 0x56bc75e2d630fffff);
-        assert(token.balanceOf(0x690B9A9E9aa1C9dB991C7721a92d351Db4FaC990) == 0x56bc75e2d630fffff);
+        assert(
+            (feeManager.fee() * computedFee) / 10000 ==
+                address(feeManager).balance - oldFeeManagerBalance
+        );
+        assert(
+            token.balanceOf(address(account)) == 100 ether - 0x56bc75e2d630fffff
+        );
+        assert(
+            token.balanceOf(0x690B9A9E9aa1C9dB991C7721a92d351Db4FaC990) ==
+                0x56bc75e2d630fffff
+        );
     }
 
     receive() external payable {}
@@ -574,12 +689,10 @@ contract ContractSigner is IERC1271 {
 
     mapping(address => mapping(bytes32 => bytes32)) signatures;
 
-    function isValidSignature(bytes32 hash, bytes memory signature)
-        external
-        view
-        override
-        returns (bytes4 magicValue)
-    {
+    function isValidSignature(
+        bytes32 hash,
+        bytes memory signature
+    ) external view override returns (bytes4 magicValue) {
         address signer = hash.recover(signature);
         if (signatures[signer][hash] == keccak256(signature)) {
             return IERC1271.isValidSignature.selector;

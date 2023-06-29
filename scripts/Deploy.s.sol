@@ -14,11 +14,11 @@ contract DeployScript is Script {
         address entrypoint = vm.envAddress("ENTRYPOINT");
         bytes32 versionSalt = vm.envBytes32("VERSION_SALT");
         vm.startBroadcast(deployerPrivateKey);
-        FeeManager feeManager = new FeeManager{salt: versionSalt}();
-        feeManager.initialize(vm.envAddress("OWNER"));
+        // FeeManager feeManager = new FeeManager{salt: versionSalt}();
+        // feeManager.initialize(vm.envAddress("OWNER"));
         PermissiveAccount impl = new PermissiveAccount{salt: versionSalt}(
             entrypoint,
-            payable(address(feeManager))
+            payable(address(0x687F79f1BBC3591C541b25D3ce3A642E3c822909))
         );
         new PermissiveFactory{salt: versionSalt}(address(impl));
         vm.stopBroadcast();
