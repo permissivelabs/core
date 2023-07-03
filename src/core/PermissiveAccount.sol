@@ -27,6 +27,7 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
 
     mapping(address => bytes32) public operatorPermissions;
     mapping(bytes32 => uint256) public remainingPermUsage;
+    mapping(bytes32 => bool) public signed;
     IEntryPoint private immutable _entryPoint;
     FeeManager private immutable feeManager;
     bool private _initialized;
@@ -205,6 +206,19 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
         }
     }
 
+    // @dev structData = typeHash || encodedData
+    function sign712(
+        bytes32 domainSeparator,
+        bytes calldata structData
+    ) external {
+        require(msg.sender == address(this));
+        bytes32 hash = ECDSA.toTypedDataHash(
+            domainSeparator,
+            keccak256(structData)
+        );
+        signed[hash] = true;
+    }
+
     /* INTERNAL */
 
     function _hashTypedDataV4(
@@ -313,10 +327,11 @@ contract PermissiveAccount is BaseAccount, IPermissiveAccount, Ownable, EIP712 {
     }
 
     function isValidSignature(
-        bytes32 _hash,
+        bytes32 hash,
         bytes calldata _signature
     ) external view returns (bytes4) {
-        if (ECDSA.recover(_hash, _signature) == owner()) {
+        if (signed[hash]) return 0x1626ba7e;
+        if (ECDSA.recover(hash, _signature) == owner()) {
             return 0x1626ba7e;
         } else {
             return 0xffffffff;
