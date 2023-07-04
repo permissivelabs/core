@@ -25,8 +25,8 @@ contract ERC20Limiter is IDataValidator {
 
     function isValidData(
         UserOperation calldata userOp,
-        bytes32 userOpHash,
-        uint256 missingAccountFunds
+        bytes32,
+        uint256
     ) external override returns (bool) {
         (
             ,
