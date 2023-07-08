@@ -72,8 +72,10 @@ contract SafeModule is ISafeModule {
         uint256 gasFee
     ) external {
         _requireFromEntryPointOrOwner();
-        (bool success, bytes memory returnData) = address(permissionExecutor)
-            .delegatecall(
+        (bool success, bytes memory returnData) = safe
+            .execTransactionFromModuleReturnData(
+                address(permissionExecutor),
+                0,
                 abi.encodeWithSelector(
                     PermissionExecutor.execute.selector,
                     dest,
@@ -81,7 +83,8 @@ contract SafeModule is ISafeModule {
                     func,
                     permission,
                     gasFee
-                )
+                ),
+                ISafe.Operation.DelegateCall
             );
         if (!success) {
             assembly {
