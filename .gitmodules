@@ -21,3 +21,6 @@
 	path = lib/zerodev-wallet-kernel
 	url = https://github.com/zerodevapp/zerodev-wallet-kernel
 	branch = kernel_v2
+[submodule "lib/scw-contracts"]
+	path = lib/scw-contracts
+	url = https://github.com/bcnmy/scw-contracts
