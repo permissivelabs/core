@@ -4,13 +4,28 @@ pragma solidity ^0.8.18;
 
 // SAFE related
 import "./ISafe.sol";
-import "./ISafeModule.sol";
 // Permissive related
 import "../../utils/Permission.sol";
 import "../../core/PermissionVerifier.sol";
 import "../../core/PermissionExecutor.sol";
 
-contract SafeModule is ISafeModule {
+contract SafeModule {
+    event OperatorMutated(
+        address indexed operator,
+        bytes32 indexed oldPermissions,
+        bytes32 indexed newPermissions
+    );
+    event PermissionVerified(bytes32 indexed userOpHash, UserOperation userOp);
+    event PermissionUsed(
+        bytes32 indexed permHash,
+        address dest,
+        uint256 value,
+        bytes func,
+        Permission permission,
+        uint256 gasFee
+    );
+    event NewSafe(address safe);
+
     ISafe public safe;
 
     IEntryPoint immutable entryPoint;
