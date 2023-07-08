@@ -2,8 +2,7 @@
 
 pragma solidity ^0.8.18;
 
-import "./ISafe.sol";
-import "account-abstraction/interfaces/IAccount.sol";
+import "account-abstraction/interfaces/UserOperation.sol";
 import "../../utils/Permission.sol";
 
 interface ISafeModule {
