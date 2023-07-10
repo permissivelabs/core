@@ -25,8 +25,5 @@ interface IPermissionRegistry {
         uint256 remainingUsage
     ) external;
 
-    function setOperatorPermissions(
-        PermissionSet calldata permSet,
-        bytes calldata signature
-    ) external;
+    function setOperatorPermissions(PermissionSet calldata permSet) external;
 }

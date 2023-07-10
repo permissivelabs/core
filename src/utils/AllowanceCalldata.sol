@@ -12,23 +12,23 @@ uint256 constant AND = 5;
 uint256 constant OR = 6;
 
 library AllowanceCalldata {
-    function sliceRLPItems(
+    function fillArray(
         RLPReader.RLPItem[] memory arguments,
-        uint256 start
-    ) public pure returns (RLPReader.RLPItem[] memory newArguments) {
-        uint256 length = arguments.length - start;
+        uint256 index,
+        uint256 length
+    ) internal pure returns (RLPReader.RLPItem[] memory newArguments) {
         assembly {
             newArguments := mload(0x40)
             mstore(0x40, add(newArguments, 0x20))
             mstore(newArguments, length)
             let hit := mul(add(length, 1), 0x20)
-            let memStart := add(arguments, mul(start, 0x20))
+            let memStart := add(arguments, mul(index, 0x20))
             for {
                 let i := 0x20
             } lt(i, hit) {
                 i := add(i, 0x20)
             } {
-                mstore(add(newArguments, i), mload(add(memStart, i)))
+                mstore(add(newArguments, i), mload(add(memStart, 0x20)))
             }
             mstore(0x40, add(mload(0x40), mul(length, 0x20)))
         }
@@ -38,7 +38,7 @@ library AllowanceCalldata {
         RLPReader.RLPItem[] memory allowedArguments,
         RLPReader.RLPItem[] memory arguments,
         bool isOr
-    ) public view returns (bool canPass) {
+    ) internal view returns (bool canPass) {
         if (allowedArguments.length == 0) return true;
         for (uint256 i = 0; i < allowedArguments.length; i = unsafe_inc(i)) {
             RLPReader.RLPItem[] memory prefixAndArg = RLPReader.toList(
@@ -68,10 +68,9 @@ library AllowanceCalldata {
                 );
                 canPass = validateArguments(
                     subAllowance,
-                    sliceRLPItems(arguments, i),
+                    fillArray(arguments, i, subAllowance.length),
                     true
                 );
-                i = unsafe_inc(i);
             } else if (prefix == NE) {
                 bytes memory allowedArgument = RLPReader.toBytes(
                     prefixAndArg[1]
@@ -84,10 +83,9 @@ library AllowanceCalldata {
                 );
                 canPass = validateArguments(
                     subAllowance,
-                    sliceRLPItems(arguments, i),
+                    fillArray(arguments, i, subAllowance.length),
                     false
                 );
-                i = unsafe_inc(i);
             } else {
                 revert("Invalid calldata prefix");
             }

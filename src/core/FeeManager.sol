@@ -21,8 +21,8 @@ contract FeeManager is Ownable {
         fee = _fee;
     }
 
-    receive() external payable {
-        payable(owner()).transfer(address(this).balance);
+    function pay() external payable {
+        payable(owner()).transfer(msg.value);
         emit FeePaid(msg.sender, msg.value);
     }
 }

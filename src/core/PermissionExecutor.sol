@@ -19,19 +19,23 @@ contract PermissionExecutor is IPermissionExecutor {
     function execute(
         address dest,
         uint256 value,
-        bytes memory func,
+        bytes calldata func,
         Permission calldata permission,
+        bytes32[] calldata,
         uint256 gasFee
     ) external {
-        payable(address(feeManager)).transfer(
-            (gasFee * feeManager.fee()) / 10000
-        );
+        feeManager.pay{value: (gasFee * feeManager.fee()) / 10000}();
         (bool success, bytes memory result) = dest.call{value: value}(
             bytes.concat(
                 func.slice(0, 4),
                 AllowanceCalldata.RLPtoABI(func.slice(4, func.length - 4))
             )
         );
+        if (!success) {
+            assembly {
+                revert(add(result, 32), mload(result))
+            }
+        }
         emit PermissionUsed(
             permission.hash(),
             dest,
@@ -40,10 +44,8 @@ contract PermissionExecutor is IPermissionExecutor {
             permission,
             gasFee
         );
-        if (!success) {
-            assembly {
-                revert(add(result, 32), mload(result))
-            }
+        assembly {
+            return(add(result, 32), mload(result))
         }
     }
 }

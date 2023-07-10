@@ -14,12 +14,6 @@ contract PermissiveValidator is IKernelValidator {
         permissionVerifier = verifier;
     }
 
-    /*
-        EXTERNALS
-    */
-
-    // Zerodev Validator
-
     function enable(bytes calldata) external override {}
 
     function disable(bytes calldata) external pure override {}

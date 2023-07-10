@@ -55,32 +55,33 @@ contract PermissionVerifier is IPermissionVerifier {
                 )
             returns (bytes4 magicValue) {
                 validationData = _packValidationData(
-                    ValidationData(
-                        magicValue == IERC1271.isValidSignature.selector
+                    ValidationData({
+                        aggregator: magicValue ==
+                            IERC1271.isValidSignature.selector
                             ? address(0)
                             : address(1),
-                        permission.validAfter,
-                        permission.validUntil
-                    )
+                        validAfter: permission.validAfter,
+                        validUntil: permission.validUntil
+                    })
                 );
             } catch {
                 validationData = _packValidationData(
-                    ValidationData(
-                        address(1),
-                        permission.validAfter,
-                        permission.validUntil
-                    )
+                    ValidationData({
+                        aggregator: address(1),
+                        validAfter: permission.validAfter,
+                        validUntil: permission.validUntil
+                    })
                 );
             }
         } else if (permission.operator != hash.recover(userOp.signature)) {
             return SIG_VALIDATION_FAILED;
         } else {
             validationData = _packValidationData(
-                ValidationData(
-                    address(0),
-                    permission.validAfter,
-                    permission.validUntil
-                )
+                ValidationData({
+                    aggregator: address(0),
+                    validAfter: permission.validAfter,
+                    validUntil: permission.validUntil
+                })
             );
         }
         bytes32 permHash = permission.hash();
@@ -95,18 +96,15 @@ contract PermissionVerifier is IPermissionVerifier {
     function computeGasFee(
         UserOperation memory userOp
     ) public pure returns (uint256 fee) {
-        unchecked {
-            uint256 mul = address(bytes20(userOp.paymasterAndData)) !=
-                address(0)
-                ? 3
-                : 1;
-            uint256 requiredGas = userOp.callGasLimit +
-                userOp.verificationGasLimit *
-                mul +
-                userOp.preVerificationGas;
+        uint256 mul = address(bytes20(userOp.paymasterAndData)) != address(0)
+            ? 3
+            : 1;
+        uint256 requiredGas = userOp.callGasLimit +
+            userOp.verificationGasLimit *
+            mul +
+            userOp.preVerificationGas;
 
-            fee = requiredGas * userOp.maxFeePerGas;
-        }
+        fee = requiredGas * userOp.maxFeePerGas;
     }
 
     function _validateData(
@@ -138,7 +136,7 @@ contract PermissionVerifier is IPermissionVerifier {
         );
         if (permission.to != to) revert("InvalidTo");
         uint256 rPermU = permissionRegistry.remainingPermUsage(
-            msg.sender,
+            address(this),
             permHash
         );
         if (permission.maxUsage > 0) {
@@ -178,7 +176,7 @@ contract PermissionVerifier is IPermissionVerifier {
         bool isValidProof = MerkleProof.verify(
             proof,
             permissionRegistry.operatorPermissions(
-                msg.sender,
+                address(this),
                 permission.operator
             ),
             keccak256(bytes.concat(permHash))
