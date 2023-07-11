@@ -1,11 +1,11 @@
 on: [push]
+env:
+  RPC_1: ${{ vars.RPC_1 }}
 
 name: test
 
 jobs:
   check:
-    env:
-      RPC_1: $RPC_1
     name: Foundry project
     runs-on: ubuntu-latest
     steps:
