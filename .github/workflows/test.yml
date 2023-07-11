@@ -1,7 +1,7 @@
 on: [push]
 env:
   RPC_1: ${{ vars.RPC_1 }}
-  FOUNDRY_FUZZ_SEED: 0x1c6b15adc6fa0c1144b8dce3443a90c59bbd566170363d66768a038d09a06e23
+  FOUNDRY_FUZZ_SEED: "0x1c6b15adc6fa0c1144b8dce3443a90c59bbd566170363d66768a038d09a06e23"
 
 name: test
 
