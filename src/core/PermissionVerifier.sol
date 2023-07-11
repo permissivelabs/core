@@ -34,9 +34,41 @@ contract PermissionVerifier is IPermissionVerifier {
         external
         returns (uint256 validationData)
     {
+        (
+            address to,
+            uint256 value,
+            bytes memory callData,
+            Permission memory permission,
+            bytes32[] memory proof,
+            uint256 providedFee
+        ) = abi.decode(userOp.callData[4:], (address, uint256, bytes, Permission, bytes32[], uint256));
+        validationData = _validationData(userOp, userOpHash, permission);
+        bytes32 permHash = permission.hash();
+        _validateMerklePermission(permission, proof, permHash);
+        _validatePermission(to, value, callData, userOp, permission, permHash);
+        _validateData(userOp, userOpHash, missingAccountFunds, permission);
+        _validateFee(userOp, providedFee);
+        emit PermissionVerified(userOpHash, userOp);
+    }
+
+    function computeGasFee(UserOperation memory userOp) public pure returns (uint256 fee) {
+        uint256 mul = address(bytes20(userOp.paymasterAndData)) != address(0) ? 3 : 1;
+        uint256 requiredGas = userOp.callGasLimit + userOp.verificationGasLimit * mul + userOp.preVerificationGas;
+
+        fee = requiredGas * userOp.maxFeePerGas;
+    }
+
+    function _validateFee(UserOperation calldata userOp, uint256 providedFee) internal pure {
+        uint256 gasFee = computeGasFee(userOp);
+        if (providedFee != gasFee) revert("Invalid provided fee");
+    }
+
+    function _validationData(UserOperation calldata userOp, bytes32 userOpHash, Permission memory permission)
+        internal
+        view
+        returns (uint256 validationData)
+    {
         bytes32 hash = userOpHash.toEthSignedMessageHash();
-        (,,, Permission memory permission, bytes32[] memory proof, uint256 providedFee) =
-            abi.decode(userOp.callData[4:], (address, uint256, bytes, Permission, bytes32[], uint256));
         if (permission.operator.code.length > 0) {
             try IERC1271(permission.operator).isValidSignature(hash, userOp.signature) returns (bytes4 magicValue) {
                 validationData = _packValidationData(
@@ -66,20 +98,6 @@ contract PermissionVerifier is IPermissionVerifier {
                 })
             );
         }
-        bytes32 permHash = permission.hash();
-        _validateMerklePermission(permission, proof, permHash);
-        _validatePermission(userOp, permission, permHash);
-        _validateData(userOp, userOpHash, missingAccountFunds, permission);
-        uint256 gasFee = computeGasFee(userOp);
-        if (providedFee != gasFee) revert("Invalid provided fee");
-        emit PermissionVerified(userOpHash, userOp);
-    }
-
-    function computeGasFee(UserOperation memory userOp) public pure returns (uint256 fee) {
-        uint256 mul = address(bytes20(userOp.paymasterAndData)) != address(0) ? 3 : 1;
-        uint256 requiredGas = userOp.callGasLimit + userOp.verificationGasLimit * mul + userOp.preVerificationGas;
-
-        fee = requiredGas * userOp.maxFeePerGas;
     }
 
     function _validateData(
@@ -96,11 +114,14 @@ contract PermissionVerifier is IPermissionVerifier {
         }
     }
 
-    function _validatePermission(UserOperation calldata userOp, Permission memory permission, bytes32 permHash)
-        internal
-    {
-        (address to, uint256 value, bytes memory callData,,) =
-            abi.decode(userOp.callData[4:], (address, uint256, bytes, Permission, bytes32[]));
+    function _validatePermission(
+        address to,
+        uint256 value,
+        bytes memory callData,
+        UserOperation calldata userOp,
+        Permission memory permission,
+        bytes32 permHash
+    ) internal {
         if (permission.to != to) revert("InvalidTo");
         uint256 rPermU = permissionRegistry.remainingPermUsage(address(this), permHash);
         if (permission.maxUsage > 0) {
@@ -121,11 +142,7 @@ contract PermissionVerifier is IPermissionVerifier {
         ) revert("Not allowed Calldata");
         if (permission.selector != bytes4(callData)) revert("InvalidSelector");
         if (permission.paymaster != address(0)) {
-            address paymaster = address(0);
-            assembly {
-                let paymasterOffset := calldataload(add(userOp, 288))
-                paymaster := calldataload(add(paymasterOffset, add(userOp, 20)))
-            }
+            address paymaster = address(bytes20(userOp.paymasterAndData));
             if (paymaster != permission.paymaster) revert("InvalidPaymaster");
         }
     }

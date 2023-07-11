@@ -60,8 +60,7 @@ contract VerifierTest is Test {
         bytes32 hash = UserOperationLib.hash(op);
         (v, r, s) = vm.sign(privateKey, hash.toEthSignedMessageHash());
         op.signature = abi.encodePacked(r, s, v);
-        (bool success, bytes memory result) =
-            address(verifier).delegatecall(abi.encodeWithSelector(verifier.verify.selector, op, hash, 0));
+        (bool success, bytes memory result) = callVerifier(op, hash);
         assert(success == false);
         assert(
             keccak256(result)
@@ -91,8 +90,7 @@ contract VerifierTest is Test {
         bytes32 hash = UserOperationLib.hash(op);
         (v, r, s) = vm.sign(privateKey, hash.toEthSignedMessageHash());
         op.signature = abi.encodePacked(r, s, v);
-        (bool success, bytes memory result) =
-            address(verifier).delegatecall(abi.encodeWithSelector(verifier.verify.selector, op, hash, 0));
+        (bool success, bytes memory result) = callVerifier(op, hash);
         assert(success == false);
         assert(
             keccak256(result)
@@ -122,7 +120,7 @@ contract VerifierTest is Test {
         bytes32 hash = UserOperationLib.hash(op);
         (v, r, s) = vm.sign(privateKey, hash.toEthSignedMessageHash());
         op.signature = abi.encodePacked(r, s, v);
-        (bool success,) = address(verifier).delegatecall(abi.encodeWithSelector(verifier.verify.selector, op, hash, 0));
+        (bool success,) = callVerifier(op, hash);
         assert(success == false);
     }
 
@@ -159,8 +157,7 @@ contract VerifierTest is Test {
         bytes32 hash = UserOperationLib.hash(op);
         (v, r, s) = vm.sign(privateKey, hash.toEthSignedMessageHash());
         op.signature = abi.encodePacked(r, s, v);
-        (bool success, bytes memory result) =
-            address(verifier).delegatecall(abi.encodeWithSelector(verifier.verify.selector, op, hash, 0));
+        (bool success, bytes memory result) = callVerifier(op, hash);
         assert(success == false);
         assert(
             keccak256(result)
@@ -177,7 +174,8 @@ contract VerifierTest is Test {
     ) public {
         validPrivateKey(privateKey);
         vm.assume(perm.operator.code.length == 0);
-        vm.assume(perm.paymaster != address(bytes20(op.paymasterAndData)));
+        address paymaster = address(0);
+        vm.assume(perm.paymaster != paymaster);
         vm.assume(gasFee < 100 ether);
         perm.operator = vm.addr(privateKey);
         perm.to = dest;
@@ -203,8 +201,7 @@ contract VerifierTest is Test {
         bytes32 hash = UserOperationLib.hash(op);
         (v, r, s) = vm.sign(privateKey, hash.toEthSignedMessageHash());
         op.signature = abi.encodePacked(r, s, v);
-        (bool success, bytes memory result) =
-            address(verifier).delegatecall(abi.encodeWithSelector(verifier.verify.selector, op, hash, 0));
+        (bool success, bytes memory result) = callVerifier(op, hash);
         assert(success == false);
         assert(
             keccak256(result)
@@ -247,8 +244,7 @@ contract VerifierTest is Test {
         bytes32 hash = UserOperationLib.hash(op);
         (v, r, s) = vm.sign(privateKey, hash.toEthSignedMessageHash());
         op.signature = abi.encodePacked(r, s, v);
-        (bool success, bytes memory result) =
-            address(verifier).delegatecall(abi.encodeWithSelector(verifier.verify.selector, op, hash, 0));
+        (bool success, bytes memory result) = callVerifier(op, hash);
         assert(success == false);
         assert(
             keccak256(result)
@@ -296,8 +292,7 @@ contract VerifierTest is Test {
         bytes32 hash = UserOperationLib.hash(op);
         (v, r, s) = vm.sign(privateKey, hash.toEthSignedMessageHash());
         op.signature = abi.encodePacked(r, s, v);
-        (bool success, bytes memory result) =
-            address(verifier).delegatecall(abi.encodeWithSelector(verifier.verify.selector, op, hash, 0));
+        (bool success, bytes memory result) = callVerifier(op, hash);
         assert(success == false);
         assert(
             keccak256(result)
@@ -341,8 +336,7 @@ contract VerifierTest is Test {
             op.signature = abi.encodePacked(r, s, v);
             vm.expectEmit(true, false, false, true, address(this));
             emit PermissionVerified(hash, op);
-            (bool success, bytes memory result) =
-                address(verifier).delegatecall(abi.encodeWithSelector(verifier.verify.selector, op, hash, 0));
+            (bool success, bytes memory result) = callVerifier(op, hash);
             if (success == false) {
                 assert(
                     keccak256(result)
@@ -367,5 +361,10 @@ contract VerifierTest is Test {
             privateKey < 115792089237316195423570985008687907852837564279074904382605163141518161494337
                 && privateKey != 0
         );
+    }
+
+    function callVerifier(UserOperation memory op, bytes32 hash) internal returns (bool success, bytes memory result) {
+        (success, result) =
+            address(verifier).delegatecall(abi.encodeWithSelector(verifier.verify.selector, op, hash, 0));
     }
 }
