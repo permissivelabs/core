@@ -10,19 +10,13 @@ contract OperationValidator {
         permissionVerifier = _verifier;
     }
 
-    function validateUserOp(
-        UserOperation calldata userOp,
-        bytes32 userOpHash
-    ) external returns (uint256 validationData) {
-        (bool success, bytes memory returnData) = address(permissionVerifier)
-            .delegatecall(
-                abi.encodeWithSelector(
-                    PermissionVerifier.verify.selector,
-                    userOp,
-                    userOpHash,
-                    0
-                )
-            );
+    function validateUserOp(UserOperation calldata userOp, bytes32 userOpHash)
+        external
+        returns (uint256 validationData)
+    {
+        (bool success, bytes memory returnData) = address(permissionVerifier).delegatecall(
+            abi.encodeWithSelector(PermissionVerifier.verify.selector, userOp, userOpHash, 0)
+        );
         if (!success) {
             assembly {
                 revert(add(returnData, 32), mload(returnData))

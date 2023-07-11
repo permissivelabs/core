@@ -5,11 +5,6 @@ import "../utils/Permission.sol";
 
 interface IPermissionExecutor {
     event PermissionUsed(
-        bytes32 indexed permHash,
-        address dest,
-        uint256 value,
-        bytes func,
-        Permission permission,
-        uint256 gasFee
+        bytes32 indexed permHash, address dest, uint256 value, bytes func, Permission permission, uint256 gasFee
     );
 }

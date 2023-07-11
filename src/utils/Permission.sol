@@ -30,9 +30,7 @@ struct Permission {
 }
 
 library PermissionLib {
-    function hash(
-        Permission memory permission
-    ) internal pure returns (bytes32 permHash) {
+    function hash(Permission memory permission) internal pure returns (bytes32 permHash) {
         permHash = keccak256(
             abi.encode(
                 permission.operator,

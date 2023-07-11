@@ -10,19 +10,10 @@ import "../../core/PermissionVerifier.sol";
 import "../../core/PermissionExecutor.sol";
 
 contract SafeModule {
-    event OperatorMutated(
-        address indexed operator,
-        bytes32 indexed oldPermissions,
-        bytes32 indexed newPermissions
-    );
+    event OperatorMutated(address indexed operator, bytes32 indexed oldPermissions, bytes32 indexed newPermissions);
     event PermissionVerified(bytes32 indexed userOpHash, UserOperation userOp);
     event PermissionUsed(
-        bytes32 indexed permHash,
-        address dest,
-        uint256 value,
-        bytes func,
-        Permission permission,
-        uint256 gasFee
+        bytes32 indexed permHash, address dest, uint256 value, bytes func, Permission permission, uint256 gasFee
     );
     event NewSafe(address safe);
 
@@ -32,11 +23,7 @@ contract SafeModule {
     PermissionVerifier immutable permissionVerifier;
     PermissionExecutor immutable permissionExecutor;
 
-    constructor(
-        IEntryPoint _entryPoint,
-        PermissionVerifier _verifier,
-        PermissionExecutor _executor
-    ) {
+    constructor(IEntryPoint _entryPoint, PermissionVerifier _verifier, PermissionExecutor _executor) {
         entryPoint = _entryPoint;
         permissionVerifier = _verifier;
         permissionExecutor = _executor;
@@ -52,22 +39,15 @@ contract SafeModule {
 
     // EXTERNAL FUNCTIONS
 
-    function validateUserOp(
-        UserOperation calldata userOp,
-        bytes32 userOpHash,
-        uint256 missingAccountFunds
-    ) external returns (uint256 validationData) {
+    function validateUserOp(UserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
+        external
+        returns (uint256 validationData)
+    {
         _requireFromEntryPointOrOwner();
         // PermissionVerifier
-        (bool success, bytes memory returnData) = address(permissionVerifier)
-            .delegatecall(
-                abi.encodeWithSelector(
-                    PermissionVerifier.verify.selector,
-                    userOp,
-                    userOpHash,
-                    missingAccountFunds
-                )
-            );
+        (bool success, bytes memory returnData) = address(permissionVerifier).delegatecall(
+            abi.encodeWithSelector(PermissionVerifier.verify.selector, userOp, userOpHash, missingAccountFunds)
+        );
         if (!success) {
             assembly {
                 revert(add(returnData, 32), mload(returnData))
@@ -87,20 +67,12 @@ contract SafeModule {
         uint256 gasFee
     ) external {
         _requireFromEntryPointOrOwner();
-        (bool success, bytes memory returnData) = safe
-            .execTransactionFromModuleReturnData(
-                address(permissionExecutor),
-                0,
-                abi.encodeWithSelector(
-                    PermissionExecutor.execute.selector,
-                    dest,
-                    value,
-                    func,
-                    permission,
-                    gasFee
-                ),
-                ISafe.Operation.DelegateCall
-            );
+        (bool success, bytes memory returnData) = safe.execTransactionFromModuleReturnData(
+            address(permissionExecutor),
+            0,
+            abi.encodeWithSelector(PermissionExecutor.execute.selector, dest, value, func, permission, gasFee),
+            ISafe.Operation.DelegateCall
+        );
         if (!success) {
             assembly {
                 revert(add(returnData, 32), mload(returnData))
@@ -112,17 +84,13 @@ contract SafeModule {
 
     function _requireFromEntryPointOrOwner() internal view {
         require(
-            msg.sender == address(entryPoint) || msg.sender == address(safe),
-            "account: not from EntryPoint or owner"
+            msg.sender == address(entryPoint) || msg.sender == address(safe), "account: not from EntryPoint or owner"
         );
     }
 
     function _payPrefund(uint256 missingAccountFunds) internal {
         if (missingAccountFunds != 0) {
-            (bool success, ) = payable(msg.sender).call{
-                value: missingAccountFunds,
-                gas: type(uint256).max
-            }("");
+            (bool success,) = payable(msg.sender).call{value: missingAccountFunds, gas: type(uint256).max}("");
             (success);
         }
     }

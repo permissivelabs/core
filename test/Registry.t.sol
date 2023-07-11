@@ -26,16 +26,11 @@ contract RegistryTest is Test {
 
     function testOperatorPermissions(PermissionSet calldata permSet) public {
         registry.setOperatorPermissions(permSet);
-        assert(
-            registry.operatorPermissions(address(this), permSet.operator) ==
-                permSet.merkleRootPermissions
-        );
+        assert(registry.operatorPermissions(address(this), permSet.operator) == permSet.merkleRootPermissions);
     }
 
     function testPermusage(uint256 permUsage, bytes32 permHash) public {
         registry.setRemainingPermUsage(permHash, permUsage);
-        assert(
-            registry.remainingPermUsage(address(this), permHash) == permUsage
-        );
+        assert(registry.remainingPermUsage(address(this), permHash) == permUsage);
     }
 }

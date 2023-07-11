@@ -6,6 +6,7 @@ import "../src/core/FeeManager.sol";
 
 contract FeeManagerTest is Test {
     FeeManager feeManager;
+
     event FeePaid(address indexed from, uint256 amount);
 
     function setUp() public {

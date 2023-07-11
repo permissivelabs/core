@@ -4,9 +4,7 @@ pragma solidity ^0.8.18;
 import "account-abstraction/core/BaseAccount.sol";
 
 interface IDataValidator {
-    function isValidData(
-        UserOperation calldata userOp,
-        bytes32 userOpHash,
-        uint256 missingAccountFunds
-    ) external returns (bool);
+    function isValidData(UserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
+        external
+        returns (bool);
 }

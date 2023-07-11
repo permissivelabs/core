@@ -15,19 +15,13 @@ contract BiconomyAuthorizationModule is BaseAuthorizationModule {
         permissionExecutor = _executor;
     }
 
-    function validateUserOp(
-        UserOperation calldata userOp,
-        bytes32 userOpHash
-    ) external returns (uint256 validationData) {
-        (bool success, bytes memory returnData) = address(permissionVerifier)
-            .delegatecall(
-                abi.encodeWithSelector(
-                    PermissionVerifier.verify.selector,
-                    userOp,
-                    userOpHash,
-                    0
-                )
-            );
+    function validateUserOp(UserOperation calldata userOp, bytes32 userOpHash)
+        external
+        returns (uint256 validationData)
+    {
+        (bool success, bytes memory returnData) = address(permissionVerifier).delegatecall(
+            abi.encodeWithSelector(PermissionVerifier.verify.selector, userOp, userOpHash, 0)
+        );
         if (!success) {
             assembly {
                 revert(add(returnData, 32), mload(returnData))
@@ -44,20 +38,12 @@ contract BiconomyAuthorizationModule is BaseAuthorizationModule {
         bytes32[] calldata,
         uint256 gasFee
     ) external {
-        (bool success, bytes memory returnData) = ModuleManager(msg.sender)
-            .execTransactionFromModuleReturnData(
-                address(permissionExecutor),
-                0,
-                abi.encodeWithSelector(
-                    PermissionExecutor.execute.selector,
-                    dest,
-                    value,
-                    func,
-                    permission,
-                    gasFee
-                ),
-                Enum.Operation.DelegateCall
-            );
+        (bool success, bytes memory returnData) = ModuleManager(msg.sender).execTransactionFromModuleReturnData(
+            address(permissionExecutor),
+            0,
+            abi.encodeWithSelector(PermissionExecutor.execute.selector, dest, value, func, permission, gasFee),
+            Enum.Operation.DelegateCall
+        );
         if (!success) {
             assembly {
                 revert(add(returnData, 32), mload(returnData))
@@ -65,8 +51,5 @@ contract BiconomyAuthorizationModule is BaseAuthorizationModule {
         }
     }
 
-    function isValidSignature(
-        bytes32 _dataHash,
-        bytes memory _signature
-    ) public view override returns (bytes4) {}
+    function isValidSignature(bytes32 _dataHash, bytes memory _signature) public view override returns (bytes4) {}
 }

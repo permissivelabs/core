@@ -26,24 +26,14 @@ contract PermissionExecutor is IPermissionExecutor {
     ) external {
         feeManager.pay{value: (gasFee * feeManager.fee()) / 10000}();
         (bool success, bytes memory result) = dest.call{value: value}(
-            bytes.concat(
-                func.slice(0, 4),
-                AllowanceCalldata.RLPtoABI(func.slice(4, func.length - 4))
-            )
+            bytes.concat(func.slice(0, 4), AllowanceCalldata.RLPtoABI(func.slice(4, func.length - 4)))
         );
         if (!success) {
             assembly {
                 revert(add(result, 32), mload(result))
             }
         }
-        emit PermissionUsed(
-            permission.hash(),
-            dest,
-            value,
-            func,
-            permission,
-            gasFee
-        );
+        emit PermissionUsed(permission.hash(), dest, value, func, permission, gasFee);
         assembly {
             return(add(result, 32), mload(result))
         }

@@ -8,10 +8,7 @@ interface ISafe {
         DelegateCall
     }
 
-    function execTransactionFromModuleReturnData(
-        address to,
-        uint256 value,
-        bytes memory data,
-        Operation operation
-    ) external returns (bool success, bytes memory returnData);
+    function execTransactionFromModuleReturnData(address to, uint256 value, bytes memory data, Operation operation)
+        external
+        returns (bool success, bytes memory returnData);
 }
