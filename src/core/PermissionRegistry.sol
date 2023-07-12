@@ -4,6 +4,9 @@ pragma solidity ^0.8.18;
 import "../utils/Permission.sol";
 import "../interfaces/IPermissionRegistry.sol";
 
+/**
+ * @dev see {IPermissionRegistry}
+ */
 contract PermissionRegistry is IPermissionRegistry {
     mapping(address sender => mapping(address operator => bytes32 permHash)) public operatorPermissions;
 
@@ -15,9 +18,9 @@ contract PermissionRegistry is IPermissionRegistry {
         remainingPermUsage[msg.sender][permHash] = remainingUsage;
     }
 
-    function setOperatorPermissions(PermissionSet calldata permSet) external {
-        bytes32 oldValue = operatorPermissions[msg.sender][permSet.operator];
-        operatorPermissions[msg.sender][permSet.operator] = permSet.merkleRootPermissions;
-        emit OperatorMutated(permSet.operator, oldValue, permSet.merkleRootPermissions);
+    function setOperatorPermissions(address operator, bytes32 root) external {
+        bytes32 oldValue = operatorPermissions[msg.sender][operator];
+        operatorPermissions[msg.sender][operator] = root;
+        emit OperatorMutated(operator, oldValue, root);
     }
 }

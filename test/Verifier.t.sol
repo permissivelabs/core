@@ -19,7 +19,6 @@ contract VerifierTest is Test {
 
     PermissionRegistry registry;
     PermissionVerifier verifier;
-    SigUtils sigUtils;
     bytes32[] proofs;
 
     event PermissionVerified(bytes32 indexed userOpHash, UserOperation userOp);
@@ -27,16 +26,6 @@ contract VerifierTest is Test {
     function setUp() public {
         registry = new PermissionRegistry();
         verifier = new PermissionVerifier(registry);
-        sigUtils = new SigUtils(
-            DomainSeparatorUtils.buildDomainSeparator(
-                keccak256(
-                    "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-                ),
-                keccak256(bytes("Permisive PermissionRegistry")),
-                keccak256(bytes("0.0.46")),
-                address(registry)
-            )
-        );
     }
 
     function testProof(
@@ -54,17 +43,29 @@ contract VerifierTest is Test {
         perm.operator = vm.addr(privateKey);
         bytes32 root = keccak256(bytes.concat(perm.hash()));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, root);
-        registry.setOperatorPermissions(PermissionSet(vm.addr(privateKey), root));
-        op.callData =
-            abi.encodeWithSelector(PermissionExecutor.execute.selector, dest, value, func, perm, proofs, gasFee);
+        registry.setOperatorPermissions(vm.addr(privateKey), root);
+        op.callData = abi.encodeWithSelector(
+            PermissionExecutor.execute.selector,
+            dest,
+            value,
+            func,
+            perm,
+            proofs,
+            gasFee
+        );
         bytes32 hash = UserOperationLib.hash(op);
         (v, r, s) = vm.sign(privateKey, hash.toEthSignedMessageHash());
         op.signature = abi.encodePacked(r, s, v);
         (bool success, bytes memory result) = callVerifier(op, hash);
         assert(success == false);
         assert(
-            keccak256(result)
-                == keccak256(abi.encodePacked(bytes4(keccak256("Error(string)")), abi.encode("InvalidTo")))
+            keccak256(result) ==
+                keccak256(
+                    abi.encodePacked(
+                        bytes4(keccak256("Error(string)")),
+                        abi.encode("InvalidTo")
+                    )
+                )
         );
     }
 
@@ -84,17 +85,29 @@ contract VerifierTest is Test {
         perm.maxUsage = 1;
         bytes32 root = keccak256(bytes.concat(perm.hash()));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, root);
-        registry.setOperatorPermissions(PermissionSet(vm.addr(privateKey), root));
-        op.callData =
-            abi.encodeWithSelector(PermissionExecutor.execute.selector, dest, value, func, perm, proofs, gasFee);
+        registry.setOperatorPermissions(vm.addr(privateKey), root);
+        op.callData = abi.encodeWithSelector(
+            PermissionExecutor.execute.selector,
+            dest,
+            value,
+            func,
+            perm,
+            proofs,
+            gasFee
+        );
         bytes32 hash = UserOperationLib.hash(op);
         (v, r, s) = vm.sign(privateKey, hash.toEthSignedMessageHash());
         op.signature = abi.encodePacked(r, s, v);
         (bool success, bytes memory result) = callVerifier(op, hash);
         assert(success == false);
         assert(
-            keccak256(result)
-                == keccak256(abi.encodePacked(bytes4(keccak256("Error(string)")), abi.encode("OutOfPerms")))
+            keccak256(result) ==
+                keccak256(
+                    abi.encodePacked(
+                        bytes4(keccak256("Error(string)")),
+                        abi.encode("OutOfPerms")
+                    )
+                )
         );
     }
 
@@ -114,13 +127,20 @@ contract VerifierTest is Test {
         perm.maxUsage = 2;
         bytes32 root = keccak256(bytes.concat(perm.hash()));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, root);
-        registry.setOperatorPermissions(PermissionSet(vm.addr(privateKey), root));
-        op.callData =
-            abi.encodeWithSelector(PermissionExecutor.execute.selector, dest, value, func, perm, proofs, gasFee);
+        registry.setOperatorPermissions(vm.addr(privateKey), root);
+        op.callData = abi.encodeWithSelector(
+            PermissionExecutor.execute.selector,
+            dest,
+            value,
+            func,
+            perm,
+            proofs,
+            gasFee
+        );
         bytes32 hash = UserOperationLib.hash(op);
         (v, r, s) = vm.sign(privateKey, hash.toEthSignedMessageHash());
         op.signature = abi.encodePacked(r, s, v);
-        (bool success,) = callVerifier(op, hash);
+        (bool success, ) = callVerifier(op, hash);
         assert(success == false);
     }
 
@@ -137,11 +157,11 @@ contract VerifierTest is Test {
         perm.operator = vm.addr(privateKey);
         perm.to = dest;
         perm.maxUsage = 2;
-        perm.allowed_arguments =
-            hex"f851ca04880de0b6b3a7640001e202a00000000000000000000000001f9090aae28b8a3dceadf281b0f12828e676c326e202a000000000000000000000000000000000000000000000000000000002e25208e3";
+        perm
+            .allowed_arguments = hex"f851ca04880de0b6b3a7640001e202a00000000000000000000000001f9090aae28b8a3dceadf281b0f12828e676c326e202a000000000000000000000000000000000000000000000000000000002e25208e3";
         bytes32 root = keccak256(bytes.concat(perm.hash()));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, root);
-        registry.setOperatorPermissions(PermissionSet(vm.addr(privateKey), root));
+        registry.setOperatorPermissions(vm.addr(privateKey), root);
         op.callData = abi.encodeWithSelector(
             PermissionExecutor.execute.selector,
             dest,
@@ -160,8 +180,13 @@ contract VerifierTest is Test {
         (bool success, bytes memory result) = callVerifier(op, hash);
         assert(success == false);
         assert(
-            keccak256(result)
-                == keccak256(abi.encodePacked(bytes4(keccak256("Error(string)")), abi.encode("InvalidSelector")))
+            keccak256(result) ==
+                keccak256(
+                    abi.encodePacked(
+                        bytes4(keccak256("Error(string)")),
+                        abi.encode("InvalidSelector")
+                    )
+                )
         );
     }
 
@@ -181,11 +206,11 @@ contract VerifierTest is Test {
         perm.to = dest;
         perm.maxUsage = 2;
         perm.selector = ERC20.transfer.selector;
-        perm.allowed_arguments =
-            hex"f851ca04880de0b6b3a7640001e202a00000000000000000000000001f9090aae28b8a3dceadf281b0f12828e676c326e202a000000000000000000000000000000000000000000000000000000002e25208e3";
+        perm
+            .allowed_arguments = hex"f851ca04880de0b6b3a7640001e202a00000000000000000000000001f9090aae28b8a3dceadf281b0f12828e676c326e202a000000000000000000000000000000000000000000000000000000002e25208e3";
         bytes32 root = keccak256(bytes.concat(perm.hash()));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, root);
-        registry.setOperatorPermissions(PermissionSet(vm.addr(privateKey), root));
+        registry.setOperatorPermissions(vm.addr(privateKey), root);
         op.callData = abi.encodeWithSelector(
             PermissionExecutor.execute.selector,
             dest,
@@ -204,8 +229,13 @@ contract VerifierTest is Test {
         (bool success, bytes memory result) = callVerifier(op, hash);
         assert(success == false);
         assert(
-            keccak256(result)
-                == keccak256(abi.encodePacked(bytes4(keccak256("Error(string)")), abi.encode("InvalidPaymaster")))
+            keccak256(result) ==
+                keccak256(
+                    abi.encodePacked(
+                        bytes4(keccak256("Error(string)")),
+                        abi.encode("InvalidPaymaster")
+                    )
+                )
         );
     }
 
@@ -224,11 +254,11 @@ contract VerifierTest is Test {
         perm.selector = ERC20.transfer.selector;
         perm.paymaster = address(bytes20(op.paymasterAndData));
         perm.dataValidator = address(new AlwaysFailingValidator());
-        perm.allowed_arguments =
-            hex"f851ca04880de0b6b3a7640001e202a00000000000000000000000001f9090aae28b8a3dceadf281b0f12828e676c326e202a000000000000000000000000000000000000000000000000000000002e25208e3";
+        perm
+            .allowed_arguments = hex"f851ca04880de0b6b3a7640001e202a00000000000000000000000001f9090aae28b8a3dceadf281b0f12828e676c326e202a000000000000000000000000000000000000000000000000000000002e25208e3";
         bytes32 root = keccak256(bytes.concat(perm.hash()));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, root);
-        registry.setOperatorPermissions(PermissionSet(vm.addr(privateKey), root));
+        registry.setOperatorPermissions(vm.addr(privateKey), root);
         op.callData = abi.encodeWithSelector(
             PermissionExecutor.execute.selector,
             dest,
@@ -247,8 +277,13 @@ contract VerifierTest is Test {
         (bool success, bytes memory result) = callVerifier(op, hash);
         assert(success == false);
         assert(
-            keccak256(result)
-                == keccak256(abi.encodePacked(bytes4(keccak256("Error(string)")), abi.encode("Invalid data")))
+            keccak256(result) ==
+                keccak256(
+                    abi.encodePacked(
+                        bytes4(keccak256("Error(string)")),
+                        abi.encode("Invalid data")
+                    )
+                )
         );
     }
 
@@ -261,8 +296,7 @@ contract VerifierTest is Test {
     ) public {
         validPrivateKey(privateKey);
         vm.assume(perm.operator.code.length == 0);
-        try verifier.computeGasFee(op) returns (uint256) {}
-        catch {
+        try verifier.computeGasFee(op) returns (uint256) {} catch {
             vm.assume(false);
         }
         perm.operator = vm.addr(privateKey);
@@ -271,11 +305,11 @@ contract VerifierTest is Test {
         perm.selector = ERC20.transfer.selector;
         perm.paymaster = address(bytes20(op.paymasterAndData));
         perm.dataValidator = address(new AlwaysTruthyValidator());
-        perm.allowed_arguments =
-            hex"f851ca04880de0b6b3a7640001e202a00000000000000000000000001f9090aae28b8a3dceadf281b0f12828e676c326e202a000000000000000000000000000000000000000000000000000000002e25208e3";
+        perm
+            .allowed_arguments = hex"f851ca04880de0b6b3a7640001e202a00000000000000000000000001f9090aae28b8a3dceadf281b0f12828e676c326e202a000000000000000000000000000000000000000000000000000000002e25208e3";
         bytes32 root = keccak256(bytes.concat(perm.hash()));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, root);
-        registry.setOperatorPermissions(PermissionSet(vm.addr(privateKey), root));
+        registry.setOperatorPermissions(vm.addr(privateKey), root);
         op.callData = abi.encodeWithSelector(
             PermissionExecutor.execute.selector,
             dest,
@@ -295,14 +329,29 @@ contract VerifierTest is Test {
         (bool success, bytes memory result) = callVerifier(op, hash);
         assert(success == false);
         assert(
-            keccak256(result)
-                == keccak256(abi.encodePacked(bytes4(keccak256("Error(string)")), abi.encode("Invalid provided fee")))
-                || keccak256(result)
-                    == keccak256(abi.encodePacked(bytes4(keccak256("Error(string)")), abi.encode("Arithmetic over/underflow")))
+            keccak256(result) ==
+                keccak256(
+                    abi.encodePacked(
+                        bytes4(keccak256("Error(string)")),
+                        abi.encode("Invalid provided fee")
+                    )
+                ) ||
+                keccak256(result) ==
+                keccak256(
+                    abi.encodePacked(
+                        bytes4(keccak256("Error(string)")),
+                        abi.encode("Arithmetic over/underflow")
+                    )
+                )
         );
     }
 
-    function testFee(UserOperation memory op, address dest, Permission memory perm, uint256 privateKey) public {
+    function testFee(
+        UserOperation memory op,
+        address dest,
+        Permission memory perm,
+        uint256 privateKey
+    ) public {
         validPrivateKey(privateKey);
         vm.assume(perm.operator.code.length == 0);
         perm.operator = vm.addr(privateKey);
@@ -313,11 +362,11 @@ contract VerifierTest is Test {
         perm.dataValidator = address(new AlwaysTruthyValidator());
         perm.validAfter = 667;
         perm.validUntil = 999;
-        perm.allowed_arguments =
-            hex"f851ca04880de0b6b3a7640001e202a00000000000000000000000001f9090aae28b8a3dceadf281b0f12828e676c326e202a000000000000000000000000000000000000000000000000000000002e25208e3";
+        perm
+            .allowed_arguments = hex"f851ca04880de0b6b3a7640001e202a00000000000000000000000001f9090aae28b8a3dceadf281b0f12828e676c326e202a000000000000000000000000000000000000000000000000000000002e25208e3";
         bytes32 root = keccak256(bytes.concat(perm.hash()));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, root);
-        registry.setOperatorPermissions(PermissionSet(vm.addr(privateKey), root));
+        registry.setOperatorPermissions(vm.addr(privateKey), root);
         try verifier.computeGasFee(op) returns (uint256 gasFee) {
             op.callData = abi.encodeWithSelector(
                 PermissionExecutor.execute.selector,
@@ -339,14 +388,21 @@ contract VerifierTest is Test {
             (bool success, bytes memory result) = callVerifier(op, hash);
             if (success == false) {
                 assert(
-                    keccak256(result)
-                        == keccak256(
-                            abi.encodePacked(bytes4(keccak256("Error(string)")), abi.encode("Arithmetic over/underflow"))
+                    keccak256(result) ==
+                        keccak256(
+                            abi.encodePacked(
+                                bytes4(keccak256("Error(string)")),
+                                abi.encode("Arithmetic over/underflow")
+                            )
                         )
                 );
             } else {
-                assert(registry.remainingPermUsage(address(this), perm.hash()) == 1);
-                ValidationData memory validationData = _parseValidationData(uint256(bytes32(result)));
+                assert(
+                    registry.remainingPermUsage(address(this), perm.hash()) == 1
+                );
+                ValidationData memory validationData = _parseValidationData(
+                    uint256(bytes32(result))
+                );
                 assert(validationData.validAfter == perm.validAfter);
                 assert(validationData.validUntil == perm.validUntil);
                 assert(validationData.aggregator == address(0));
@@ -358,13 +414,18 @@ contract VerifierTest is Test {
 
     function validPrivateKey(uint256 privateKey) internal pure {
         vm.assume(
-            privateKey < 115792089237316195423570985008687907852837564279074904382605163141518161494337
-                && privateKey != 0
+            privateKey <
+                115792089237316195423570985008687907852837564279074904382605163141518161494337 &&
+                privateKey != 0
         );
     }
 
-    function callVerifier(UserOperation memory op, bytes32 hash) internal returns (bool success, bytes memory result) {
-        (success, result) =
-            address(verifier).delegatecall(abi.encodeWithSelector(verifier.verify.selector, op, hash, 0));
+    function callVerifier(
+        UserOperation memory op,
+        bytes32 hash
+    ) internal returns (bool success, bytes memory result) {
+        (success, result) = address(verifier).delegatecall(
+            abi.encodeWithSelector(verifier.verify.selector, op, hash, 0)
+        );
     }
 }

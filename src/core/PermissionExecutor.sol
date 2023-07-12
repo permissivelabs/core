@@ -7,6 +7,9 @@ import "./FeeManager.sol";
 import "bytes/BytesLib.sol";
 import "forge-std/console.sol";
 
+/**
+ * @dev see {IPermissionExecutor}
+ */
 contract PermissionExecutor is IPermissionExecutor {
     using BytesLib for bytes;
     using PermissionLib for Permission;
@@ -25,13 +28,10 @@ contract PermissionExecutor is IPermissionExecutor {
         bytes32[] calldata,
         uint256 gasFee
     ) external {
-        console.log("a");
         feeManager.pay{value: (gasFee * feeManager.fee()) / 10000}();
-        console.log("b");
         (bool success, bytes memory result) = dest.call{value: value}(
             bytes.concat(func.slice(0, 4), AllowanceCalldata.RLPtoABI(func.slice(4, func.length - 4)))
         );
-        console.log("c");
         if (!success) {
             assembly {
                 revert(add(result, 32), mload(result))

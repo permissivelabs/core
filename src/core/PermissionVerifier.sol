@@ -21,6 +21,9 @@ import "forge-std/console.sol";
 
 uint256 constant SIG_VALIDATION_FAILED = 1;
 
+/**
+ * @dev see {IPermissionVerifier}
+ */
 contract PermissionVerifier is IPermissionVerifier {
     using ECDSA for bytes32;
     using PermissionLib for Permission;

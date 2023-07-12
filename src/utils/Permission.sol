@@ -2,33 +2,39 @@
 
 pragma solidity ^0.8.18;
 
-struct PermissionSet {
-    address operator;
-    bytes32 merkleRootPermissions;
-}
-
+/**
+ * @title Permission
+ * @author Flydexo - @Flydex0
+ * @notice A permission is made for a specific function of a specific contract
+ * @dev 1 operator = 1 permission set
+ * @dev 1 permission set = infinite permissions
+ */
 struct Permission {
-    // the operator
+    // The address authorized to use this permission to make an userOperation on behalf of the account
     address operator;
-    // the address allowed to interact with
+    // The address that this permission permits to call
     address to;
-    // the function selector
+    // The function that this permission permits to call on the to contract
     bytes4 selector;
-    // specific arguments that are allowed for this permisison (see readme), the first one is the value
+    // see {AllowanceCalldata}
     bytes allowed_arguments;
-    // the paymaster if set will pay the transactions
+    // If set, the userOperation won't pass unless the paymaster is equal to the permission's paymaster
     address paymaster;
-    // the timestamp when the permission isn't valid anymore
-    // @dev can be 0 to express infinite
+    // The UNIX timestamp (seconds) when the permission is not valid anymore (0 = infinite)
     uint48 validUntil;
-    // the timestamp - 1 when the permission becomes valid
+    // The UNIX timestamp when the permission becomes valid
     uint48 validAfter;
-    // the max number of times + 1 this permision can be used, 0 = infinite
+    // The maximum number of times + 1 this permission can be used (0 = infinite, 1 = 0, n = n - 1)
     uint256 maxUsage;
-    // validate on-chain data
+    // The address called to make additional checks on the userOperation, see {IDataValidator}
     address dataValidator;
 }
 
+/**
+ * @title PermissionLib
+ * @author Flydexo - @Flydex0
+ * @notice Library used to hash the Permission struct
+ */
 library PermissionLib {
     function hash(Permission memory permission) internal pure returns (bytes32 permHash) {
         permHash = keccak256(

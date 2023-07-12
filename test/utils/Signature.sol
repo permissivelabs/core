@@ -21,21 +21,3 @@ library DomainSeparatorUtils {
         }
     }
 }
-
-contract SigUtils {
-    bytes32 public DOMAIN_SEPARATOR;
-
-    constructor(bytes32 _DOMAIN_SEPARATOR) {
-        DOMAIN_SEPARATOR = _DOMAIN_SEPARATOR;
-    }
-
-    bytes32 public constant TYPEHASH = 0xd7e1e23484f808c5620ce8d904e88d7540a3eeb37ac94e636726ed53571e4e3c;
-
-    function getStructHash(PermissionSet memory _permit) internal pure returns (bytes32) {
-        return keccak256(abi.encode(TYPEHASH, _permit.operator, _permit.merkleRootPermissions));
-    }
-
-    function getTypedDataHash(PermissionSet memory _permit) public view returns (bytes32) {
-        return keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, getStructHash(_permit)));
-    }
-}
