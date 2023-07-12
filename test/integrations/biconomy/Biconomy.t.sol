@@ -2,8 +2,11 @@
 pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
-import "safe/SafeL2.sol";
-import "../../../src/integrations/safe/SafeModule.sol";
+import "biconomy/SmartAccount.sol";
+import "biconomy/SmartAccountFactory.sol";
+import "biconomy/Proxy.sol";
+import "../../../src/integrations/biconomy/BiconomyModule.sol";
+import "biconomy/modules/SmartContractOwnershipRegistryModule.sol";
 import "../../../src/core/PermissionExecutor.sol";
 import "../../../src/core/PermissionVerifier.sol";
 import "../../../src/core/PermissionRegistry.sol";
@@ -16,12 +19,14 @@ address constant CONIC = 0x9aE380F0272E2162340a5bB646c354271c0F5cFC;
 address constant UNISWAP_ROUTER = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
 address constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
-contract SafeTest is Test {
+contract BiconomyTest is Test {
     using PermissionLib for Permission;
     using ECDSA for bytes32;
 
-    SafeL2 safe;
-    SafeModule permissive;
+    SmartAccount implementation;
+    SmartAccountFactory factory;
+    SmartAccount bico;
+    BiconomyAuthorizationModule permissive;
     EntryPoint entryPoint;
     PermissionVerifier verifier;
     PermissionExecutor executor;
@@ -41,18 +46,39 @@ contract SafeTest is Test {
     function setUp() public {
         uint256 fork = vm.createFork(vm.envString("RPC_1"));
         vm.selectFork(fork);
-        safe = new SafeL2();
         entryPoint = new EntryPoint();
+        implementation = new SmartAccount(entryPoint);
+        factory = new SmartAccountFactory(address(implementation));
+        bico = SmartAccount(
+            payable(
+                factory.deployAccount(
+                    address(new SmartContractOwnershipRegistryModule()),
+                    abi.encodeWithSelector(
+                        SmartContractOwnershipRegistryModule.initForSmartAccount.selector, address(this)
+                    )
+                )
+            )
+        );
         feeManager = new FeeManager();
         registry = new PermissionRegistry();
         verifier = new PermissionVerifier(registry);
         executor = new PermissionExecutor(feeManager);
-        permissive = new SafeModule(entryPoint, verifier, executor);
-        permissive.setSafe(address(safe));
-        owners.push(address(this));
-        safe.setup(owners, 1, address(0), hex"", address(0), address(0), 0, payable(address(0)));
-        vm.prank(address(safe));
-        safe.enableModule(address(permissive));
+        permissive = new BiconomyAuthorizationModule(verifier, executor);
+        vm.prank(address(bico));
+        bico.enableModule(address(permissive));
+        // owners.push(address(this));
+        // safe.setup(
+        //     owners,
+        //     1,
+        //     address(0),
+        //     hex"",
+        //     address(0),
+        //     address(0),
+        //     0,
+        //     payable(address(0))
+        // );
+        // vm.prank(address(safe));
+        // safe.enableModule(address(permissive));
     }
 
     function testSwap(uint256 operatorPrivateKey) public {
@@ -76,29 +102,31 @@ contract SafeTest is Test {
                 merkleRootPermissions: keccak256(bytes.concat(perm.hash()))
             })
         );
-        deal(CONIC, address(safe), 1 ether);
+        deal(CONIC, address(bico), 1 ether);
         vm.deal(address(permissive), 1 ether);
-        vm.deal(address(safe), 1 ether);
-        vm.prank(address(safe));
+        vm.deal(address(bico), 1 ether);
+        vm.prank(address(bico));
         ERC20(CONIC).approve(UNISWAP_ROUTER, 1 ether);
-        // vm.expectEmit(true, false, false, true, address(feeManager));
-        // vm.expectEmit(true, false, false, true, address(this));
         UserOperation memory op = UserOperation({
-            sender: address(permissive),
+            sender: address(bico),
             nonce: entryPoint.getNonce(address(permissive), 0),
             initCode: hex"",
             callData: abi.encodeWithSelector(
-                permissive.execute.selector,
-                perm.hash(),
-                UNISWAP_ROUTER,
+                SmartAccount.executeCall.selector,
+                address(permissive),
                 0,
-                bytes.concat(
-                    ISwapRouter.exactInput.selector,
-                    hex"f9012a00a00000000000000000000000000000000000000000000000000000000000000020a000000000000000000000000000000000000000000000000000000000000000a0a00000000000000000000000007fa9385be102ac3eac297483dd6233d62b3e1496a0000000000000000000000000000000000000000000000000003c012523e0eb80a00000000000000000000000000000000000000000000000000de0b6b3a7640000a00000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000002ba09ae380f0272e2162340a5bb646c354271c0f5cfc002710c02aaa39b223fe8d0aa00e5c4f27ead9083c756cc2000000000000000000000000000000000000000000"
-                ),
-                perm,
-                proofs,
-                0
+                abi.encodeWithSelector(
+                    permissive.execute.selector,
+                    UNISWAP_ROUTER,
+                    0,
+                    bytes.concat(
+                        ISwapRouter.exactInput.selector,
+                        hex"f9012a00a00000000000000000000000000000000000000000000000000000000000000020a000000000000000000000000000000000000000000000000000000000000000a0a00000000000000000000000007fa9385be102ac3eac297483dd6233d62b3e1496a0000000000000000000000000000000000000000000000000003c012523e0eb80a00000000000000000000000000000000000000000000000000de0b6b3a7640000a00000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000002ba09ae380f0272e2162340a5bb646c354271c0f5cfc002710c02aaa39b223fe8d0aa00e5c4f27ead9083c756cc2000000000000000000000000000000000000000000"
+                    ),
+                    perm,
+                    proofs,
+                    0
+                )
                 ),
             callGasLimit: 10000000,
             verificationGasLimit: 10000000,
@@ -110,20 +138,25 @@ contract SafeTest is Test {
         });
         uint256 fee = verifier.computeGasFee(op);
         op.callData = abi.encodeWithSelector(
-            permissive.execute.selector,
-            UNISWAP_ROUTER,
+            SmartAccount.executeCall.selector,
+            address(permissive),
             0,
-            bytes.concat(
-                ISwapRouter.exactInput.selector,
-                hex"f9012a00a00000000000000000000000000000000000000000000000000000000000000020a000000000000000000000000000000000000000000000000000000000000000a0a00000000000000000000000007fa9385be102ac3eac297483dd6233d62b3e1496a0000000000000000000000000000000000000000000000000003c012523e0eb80a00000000000000000000000000000000000000000000000000de0b6b3a7640000a00000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000002ba09ae380f0272e2162340a5bb646c354271c0f5cfc002710c02aaa39b223fe8d0aa00e5c4f27ead9083c756cc2000000000000000000000000000000000000000000"
-            ),
-            perm,
-            proofs,
-            fee
+            abi.encodeWithSelector(
+                permissive.execute.selector,
+                UNISWAP_ROUTER,
+                0,
+                bytes.concat(
+                    ISwapRouter.exactInput.selector,
+                    hex"f9012a00a00000000000000000000000000000000000000000000000000000000000000020a000000000000000000000000000000000000000000000000000000000000000a0a00000000000000000000000007fa9385be102ac3eac297483dd6233d62b3e1496a0000000000000000000000000000000000000000000000000003c012523e0eb80a00000000000000000000000000000000000000000000000000de0b6b3a7640000a00000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000002ba09ae380f0272e2162340a5bb646c354271c0f5cfc002710c02aaa39b223fe8d0aa00e5c4f27ead9083c756cc2000000000000000000000000000000000000000000"
+                ),
+                perm,
+                proofs,
+                fee
+            )
         );
         (uint8 v, bytes32 r, bytes32 s) =
             vm.sign(operatorPrivateKey, entryPoint.getUserOpHash(op).toEthSignedMessageHash());
-        op.signature = abi.encodePacked(r, s, v);
+        op.signature = abi.encode(abi.encodePacked(r, s, v), address(permissive));
         ops.push(op);
         uint256 oldBalance = ERC20(WETH).balanceOf(address(0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496));
         entryPoint.handleOps(ops, payable(address(this)));

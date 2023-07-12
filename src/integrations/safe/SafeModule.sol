@@ -63,14 +63,14 @@ contract SafeModule {
         bytes memory func,
         Permission calldata permission,
         // stores the proof, only used in validateUserOp
-        bytes32[] calldata,
+        bytes32[] calldata proof,
         uint256 gasFee
     ) external {
         _requireFromEntryPointOrOwner();
         (bool success, bytes memory returnData) = safe.execTransactionFromModuleReturnData(
             address(permissionExecutor),
             0,
-            abi.encodeWithSelector(PermissionExecutor.execute.selector, dest, value, func, permission, gasFee),
+            abi.encodeWithSelector(PermissionExecutor.execute.selector, dest, value, func, permission, proof, gasFee),
             ISafe.Operation.DelegateCall
         );
         if (!success) {

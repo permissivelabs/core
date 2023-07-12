@@ -17,6 +17,8 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "bytes/BytesLib.sol";
 
+import "forge-std/console.sol";
+
 uint256 constant SIG_VALIDATION_FAILED = 1;
 
 contract PermissionVerifier is IPermissionVerifier {

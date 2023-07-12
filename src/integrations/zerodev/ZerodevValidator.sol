@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.18;
 
-import "zerodev/validator/IValidator.sol";
+import "zerodev/abstract/KernelStorage.sol";
 import "account-abstraction/interfaces/UserOperation.sol";
 import "../../utils/Permission.sol";
 import "../../core/PermissionVerifier.sol";
 
-contract PermissiveValidator is IKernelValidator {
+contract ZerodevValidator is IKernelValidator {
     PermissionVerifier immutable permissionVerifier;
 
     constructor(PermissionVerifier verifier) {
