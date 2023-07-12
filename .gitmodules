@@ -16,7 +16,7 @@
 	branch = master
 [submodule "lib/safe-contracts"]
 	path = lib/safe-contracts
-	url = https://github.com/safe-global/safe-contracts
+	url = https://github.com/Flydexo/safe
 [submodule "lib/zerodev-wallet-kernel"]
 	path = lib/zerodev-wallet-kernel
 	url = https://github.com/zerodevapp/zerodev-wallet-kernel
