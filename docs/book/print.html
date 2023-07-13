@@ -1,0 +1,863 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title></title>
+        <meta name="robots" content="noindex" />
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="book.css">
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item "><a href="index.html">Home</a></li><li class="chapter-item affix "><li class="part-title">src</li><li class="chapter-item "><a href="src/core/index.html">❱ core</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="src/core/FeeManager.sol/contract.FeeManager.html">FeeManager</a></li><li class="chapter-item "><a href="src/core/PermissionExecutor.sol/contract.PermissionExecutor.html">PermissionExecutor</a></li><li class="chapter-item "><a href="src/core/PermissionRegistry.sol/contract.PermissionRegistry.html">PermissionRegistry</a></li><li class="chapter-item "><a href="src/core/PermissionVerifier.sol/contract.PermissionVerifier.html">PermissionVerifier</a></li><li class="chapter-item "><a href="src/core/PermissionVerifier.sol/constants.PermissionVerifier.html">PermissionVerifier constants</a></li></ol></li><li class="chapter-item "><a href="src/integrations/index.html">❱ integrations</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="src/integrations/6900/index.html">❱ 6900</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="src/integrations/6900/OperationValidator.sol/contract.OperationValidator.html">OperationValidator</a></li></ol></li><li class="chapter-item "><a href="src/integrations/biconomy/index.html">❱ biconomy</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="src/integrations/biconomy/BiconomyModule.sol/contract.BiconomyAuthorizationModule.html">BiconomyAuthorizationModule</a></li></ol></li><li class="chapter-item "><a href="src/integrations/safe/index.html">❱ safe</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="src/integrations/safe/ISafe.sol/interface.ISafe.html">ISafe</a></li><li class="chapter-item "><a href="src/integrations/safe/SafeModule.sol/contract.SafeModule.html">SafeModule</a></li></ol></li><li class="chapter-item "><a href="src/integrations/zerodev/index.html">❱ zerodev</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="src/integrations/zerodev/ZerodevValidator.sol/contract.ZerodevValidator.html">ZerodevValidator</a></li></ol></li></ol></li><li class="chapter-item "><a href="src/interfaces/index.html">❱ interfaces</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="src/interfaces/IDataValidator.sol/interface.IDataValidator.html">IDataValidator</a></li><li class="chapter-item "><a href="src/interfaces/IPermissionExecutor.sol/interface.IPermissionExecutor.html">IPermissionExecutor</a></li><li class="chapter-item "><a href="src/interfaces/IPermissionRegistry.sol/interface.IPermissionRegistry.html">IPermissionRegistry</a></li><li class="chapter-item "><a href="src/interfaces/IPermissionVerifier.sol/interface.IPermissionVerifier.html">IPermissionVerifier</a></li></ol></li><li class="chapter-item "><a href="src/utils/index.html">❱ utils</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="src/utils/AllowanceCalldata.sol/library.AllowanceCalldata.html">AllowanceCalldata</a></li><li class="chapter-item "><a href="src/utils/AllowanceCalldata.sol/constants.AllowanceCalldata.html">AllowanceCalldata constants</a></li><li class="chapter-item "><a href="src/utils/Permission.sol/struct.Permission.html">Permission</a></li><li class="chapter-item "><a href="src/utils/Permission.sol/library.PermissionLib.html">PermissionLib</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title"></h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/permissivelabs/core" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <div align="center">
+    <img src="https://permissive.dev/_astro/logo.ca2eae5d.svg" width="80"/>
+    <h1 id="permissive"><a class="header" href="#permissive">Permissive</a></h1>
+    <sub>By Permissive Labs</sub>
+    <h4 id="documentation"><a class="header" href="#documentation"><a href="https://docs.permissive.dev">Documentation</a></a></h4>
+</div>
+<h1 id="supported-accounts"><a class="header" href="#supported-accounts">Supported accounts</a></h1>
+<div align="center">
+    <img src="./assets/safe.svg" width="50"/>
+    <img src="./assets/zerodev.jpeg" width="50"/>
+  <img src="./assets/candide.jpeg" width="50"/>
+  <img src="./assets/patchwallet.jpeg" height="50"/>
+  <img src="./assets//biconomy.png" height="50"/>
+  <h3 id="erc-6900-compatible"><a class="header" href="#erc-6900-compatible">ERC-6900 compatible</a></h3>
+</div>
+<h1 id="future-accounts-supported"><a class="header" href="#future-accounts-supported">Future accounts supported</a></h1>
+<img src="./assets/soulwallet.jpeg" height="50"/>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="contents"><a class="header" href="#contents">Contents</a></h1>
+<ul>
+<li><a href="src/core/FeeManager.sol/contract.FeeManager.html">FeeManager</a></li>
+<li><a href="src/core/PermissionExecutor.sol/contract.PermissionExecutor.html">PermissionExecutor</a></li>
+<li><a href="src/core/PermissionRegistry.sol/contract.PermissionRegistry.html">PermissionRegistry</a></li>
+<li><a href="src/core/PermissionVerifier.sol/contract.PermissionVerifier.html">PermissionVerifier</a></li>
+<li><a href="src/core/PermissionVerifier.sol/constants.PermissionVerifier.html">PermissionVerifier constants</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="feemanager"><a class="header" href="#feemanager">FeeManager</a></h1>
+<p><a href="https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/core/FeeManager.sol">Git Source</a></p>
+<p><strong>Inherits:</strong>
+Ownable</p>
+<p><strong>Author:</strong>
+Flydexo - @Flydex0</p>
+<p>Permissive core contracts that determines the percent of gas fee that is collected by Permissive and collects the fees</p>
+<h2 id="state-variables"><a class="header" href="#state-variables">State Variables</a></h2>
+<h3 id="fee"><a class="header" href="#fee">fee</a></h3>
+<p>100 basis point, 100 = 1%, 2000 = 20%</p>
+<pre><code class="language-solidity">uint24 public fee = 2000;
+</code></pre>
+<h3 id="initialized"><a class="header" href="#initialized">initialized</a></h3>
+<p><em>needs initialization because owner is set as the CREATE2 deployer in the constructor</em></p>
+<pre><code class="language-solidity">bool initialized;
+</code></pre>
+<h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
+<h3 id="initialize"><a class="header" href="#initialize">initialize</a></h3>
+<p>initialize - Initialization function to set the real owner, see CREATE2</p>
+<pre><code class="language-solidity">function initialize(address owner) external;
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>owner</code></td><td><code>address</code></td><td>The future owner of the FeeManager</td></tr>
+</tbody></table>
+</div>
+<h3 id="setfee"><a class="header" href="#setfee">setFee</a></h3>
+<p>setFee - Sets the Permissive fee, only callable by the owner</p>
+<pre><code class="language-solidity">function setFee(uint24 _fee) external;
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>_fee</code></td><td><code>uint24</code></td><td>The new fee (100 basis point)</td></tr>
+</tbody></table>
+</div>
+<h3 id="pay"><a class="header" href="#pay">pay</a></h3>
+<p>Function called to pay the FeeManager</p>
+<p><em>used a function to avoid gas details in the core contracts</em></p>
+<pre><code class="language-solidity">function pay() external payable;
+</code></pre>
+<h2 id="events"><a class="header" href="#events">Events</a></h2>
+<h3 id="feepaid"><a class="header" href="#feepaid">FeePaid</a></h3>
+<p>FeePaid - Emitted when the Permissive fee is collected</p>
+<pre><code class="language-solidity">event FeePaid(address indexed from, uint256 amount);
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="permissionexecutor"><a class="header" href="#permissionexecutor">PermissionExecutor</a></h1>
+<p><a href="https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/core/PermissionExecutor.sol">Git Source</a></p>
+<p><strong>Inherits:</strong>
+<a href="src/core/PermissionExecutor.sol//src/interfaces/IPermissionExecutor.sol/interface.IPermissionExecutor.html">IPermissionExecutor</a></p>
+<p><em>see {IPermissionExecutor}</em></p>
+<h2 id="state-variables-1"><a class="header" href="#state-variables-1">State Variables</a></h2>
+<h3 id="feemanager-1"><a class="header" href="#feemanager-1">feeManager</a></h3>
+<pre><code class="language-solidity">FeeManager private immutable feeManager;
+</code></pre>
+<h2 id="functions-1"><a class="header" href="#functions-1">Functions</a></h2>
+<h3 id="constructor"><a class="header" href="#constructor">constructor</a></h3>
+<pre><code class="language-solidity">constructor(FeeManager _feeManager);
+</code></pre>
+<h3 id="execute"><a class="header" href="#execute">execute</a></h3>
+<pre><code class="language-solidity">function execute(
+    address dest,
+    uint256 value,
+    bytes calldata func,
+    Permission calldata permission,
+    bytes32[] calldata,
+    uint256 gasFee
+) external;
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="permissionregistry"><a class="header" href="#permissionregistry">PermissionRegistry</a></h1>
+<p><a href="https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/core/PermissionRegistry.sol">Git Source</a></p>
+<p><strong>Inherits:</strong>
+<a href="src/core/PermissionRegistry.sol//src/interfaces/IPermissionRegistry.sol/interface.IPermissionRegistry.html">IPermissionRegistry</a></p>
+<p><em>see {IPermissionRegistry}</em></p>
+<h2 id="state-variables-2"><a class="header" href="#state-variables-2">State Variables</a></h2>
+<h3 id="operatorpermissions"><a class="header" href="#operatorpermissions">operatorPermissions</a></h3>
+<pre><code class="language-solidity">mapping(address sender =&gt; mapping(address operator =&gt; bytes32 permHash)) public operatorPermissions;
+</code></pre>
+<h3 id="remainingpermusage"><a class="header" href="#remainingpermusage">remainingPermUsage</a></h3>
+<pre><code class="language-solidity">mapping(address sender =&gt; mapping(bytes32 permHash =&gt; uint256 remainingUsage)) public remainingPermUsage;
+</code></pre>
+<h2 id="functions-2"><a class="header" href="#functions-2">Functions</a></h2>
+<h3 id="constructor-1"><a class="header" href="#constructor-1">constructor</a></h3>
+<pre><code class="language-solidity">constructor();
+</code></pre>
+<h3 id="setremainingpermusage"><a class="header" href="#setremainingpermusage">setRemainingPermUsage</a></h3>
+<pre><code class="language-solidity">function setRemainingPermUsage(bytes32 permHash, uint256 remainingUsage) external;
+</code></pre>
+<h3 id="setoperatorpermissions"><a class="header" href="#setoperatorpermissions">setOperatorPermissions</a></h3>
+<pre><code class="language-solidity">function setOperatorPermissions(address operator, bytes32 root) external;
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="permissionverifier"><a class="header" href="#permissionverifier">PermissionVerifier</a></h1>
+<p><a href="https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/core/PermissionVerifier.sol">Git Source</a></p>
+<p><strong>Inherits:</strong>
+<a href="src/core/PermissionVerifier.sol//src/interfaces/IPermissionVerifier.sol/interface.IPermissionVerifier.html">IPermissionVerifier</a></p>
+<p><em>see {IPermissionVerifier}</em></p>
+<h2 id="state-variables-3"><a class="header" href="#state-variables-3">State Variables</a></h2>
+<h3 id="permissionregistry-1"><a class="header" href="#permissionregistry-1">permissionRegistry</a></h3>
+<pre><code class="language-solidity">PermissionRegistry immutable permissionRegistry;
+</code></pre>
+<h2 id="functions-3"><a class="header" href="#functions-3">Functions</a></h2>
+<h3 id="constructor-2"><a class="header" href="#constructor-2">constructor</a></h3>
+<pre><code class="language-solidity">constructor(PermissionRegistry registry);
+</code></pre>
+<h3 id="verify"><a class="header" href="#verify">verify</a></h3>
+<pre><code class="language-solidity">function verify(UserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
+    external
+    returns (uint256 validationData);
+</code></pre>
+<h3 id="computegasfee"><a class="header" href="#computegasfee">computeGasFee</a></h3>
+<pre><code class="language-solidity">function computeGasFee(UserOperation memory userOp) public pure returns (uint256 fee);
+</code></pre>
+<h3 id="_validatefee"><a class="header" href="#_validatefee">_validateFee</a></h3>
+<pre><code class="language-solidity">function _validateFee(UserOperation calldata userOp, uint256 providedFee) internal pure;
+</code></pre>
+<h3 id="_validationdata"><a class="header" href="#_validationdata">_validationData</a></h3>
+<pre><code class="language-solidity">function _validationData(UserOperation calldata userOp, bytes32 userOpHash, Permission memory permission)
+    internal
+    view
+    returns (uint256 validationData);
+</code></pre>
+<h3 id="_validatedata"><a class="header" href="#_validatedata">_validateData</a></h3>
+<pre><code class="language-solidity">function _validateData(
+    UserOperation calldata userOp,
+    bytes32 userOpHash,
+    uint256 missingAccountFunds,
+    Permission memory permission
+) internal;
+</code></pre>
+<h3 id="_validatepermission"><a class="header" href="#_validatepermission">_validatePermission</a></h3>
+<pre><code class="language-solidity">function _validatePermission(
+    address to,
+    uint256 value,
+    bytes memory callData,
+    UserOperation calldata userOp,
+    Permission memory permission,
+    bytes32 permHash
+) internal;
+</code></pre>
+<h3 id="_validatemerklepermission"><a class="header" href="#_validatemerklepermission">_validateMerklePermission</a></h3>
+<pre><code class="language-solidity">function _validateMerklePermission(Permission memory permission, bytes32[] memory proof, bytes32 permHash)
+    internal
+    view;
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="constants"><a class="header" href="#constants">Constants</a></h1>
+<p><a href="https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/core/PermissionVerifier.sol">Git Source</a></p>
+<h3 id="sig_validation_failed"><a class="header" href="#sig_validation_failed">SIG_VALIDATION_FAILED</a></h3>
+<pre><code class="language-solidity">uint256 constant SIG_VALIDATION_FAILED = 1;
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="contents-1"><a class="header" href="#contents-1">Contents</a></h1>
+<ul>
+<li><a href="src/integrations//src/integrations/6900">6900</a></li>
+<li><a href="src/integrations//src/integrations/biconomy">biconomy</a></li>
+<li><a href="src/integrations//src/integrations/safe">safe</a></li>
+<li><a href="src/integrations//src/integrations/zerodev">zerodev</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="contents-2"><a class="header" href="#contents-2">Contents</a></h1>
+<ul>
+<li><a href="src/integrations/6900/OperationValidator.sol/contract.OperationValidator.html">OperationValidator</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="operationvalidator"><a class="header" href="#operationvalidator">OperationValidator</a></h1>
+<p><a href="https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/integrations/6900/OperationValidator.sol">Git Source</a></p>
+<h2 id="state-variables-4"><a class="header" href="#state-variables-4">State Variables</a></h2>
+<h3 id="permissionverifier-1"><a class="header" href="#permissionverifier-1">permissionVerifier</a></h3>
+<pre><code class="language-solidity">PermissionVerifier immutable permissionVerifier;
+</code></pre>
+<h2 id="functions-4"><a class="header" href="#functions-4">Functions</a></h2>
+<h3 id="constructor-3"><a class="header" href="#constructor-3">constructor</a></h3>
+<pre><code class="language-solidity">constructor(PermissionVerifier _verifier);
+</code></pre>
+<h3 id="validateuserop"><a class="header" href="#validateuserop">validateUserOp</a></h3>
+<pre><code class="language-solidity">function validateUserOp(UserOperation calldata userOp, bytes32 userOpHash) external returns (uint256 validationData);
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="contents-3"><a class="header" href="#contents-3">Contents</a></h1>
+<ul>
+<li><a href="src/integrations/biconomy/BiconomyModule.sol/contract.BiconomyAuthorizationModule.html">BiconomyAuthorizationModule</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="biconomyauthorizationmodule"><a class="header" href="#biconomyauthorizationmodule">BiconomyAuthorizationModule</a></h1>
+<p><a href="https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/integrations/biconomy/BiconomyModule.sol">Git Source</a></p>
+<p><strong>Inherits:</strong>
+BaseAuthorizationModule</p>
+<h2 id="state-variables-5"><a class="header" href="#state-variables-5">State Variables</a></h2>
+<h3 id="permissionverifier-2"><a class="header" href="#permissionverifier-2">permissionVerifier</a></h3>
+<pre><code class="language-solidity">PermissionVerifier immutable permissionVerifier;
+</code></pre>
+<h3 id="permissionexecutor-1"><a class="header" href="#permissionexecutor-1">permissionExecutor</a></h3>
+<pre><code class="language-solidity">PermissionExecutor immutable permissionExecutor;
+</code></pre>
+<h2 id="functions-5"><a class="header" href="#functions-5">Functions</a></h2>
+<h3 id="constructor-4"><a class="header" href="#constructor-4">constructor</a></h3>
+<pre><code class="language-solidity">constructor(PermissionVerifier _verifier, PermissionExecutor _executor);
+</code></pre>
+<h3 id="validateuserop-1"><a class="header" href="#validateuserop-1">validateUserOp</a></h3>
+<pre><code class="language-solidity">function validateUserOp(UserOperation memory userOp, bytes32 userOpHash) external returns (uint256 validationData);
+</code></pre>
+<h3 id="execute-1"><a class="header" href="#execute-1">execute</a></h3>
+<pre><code class="language-solidity">function execute(
+    address dest,
+    uint256 value,
+    bytes memory func,
+    Permission calldata permission,
+    bytes32[] calldata proof,
+    uint256 gasFee
+) external;
+</code></pre>
+<h3 id="isvalidsignature"><a class="header" href="#isvalidsignature">isValidSignature</a></h3>
+<pre><code class="language-solidity">function isValidSignature(bytes32 _dataHash, bytes memory _signature) public view override returns (bytes4);
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="contents-4"><a class="header" href="#contents-4">Contents</a></h1>
+<ul>
+<li><a href="src/integrations/safe/ISafe.sol/interface.ISafe.html">ISafe</a></li>
+<li><a href="src/integrations/safe/SafeModule.sol/contract.SafeModule.html">SafeModule</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="isafe"><a class="header" href="#isafe">ISafe</a></h1>
+<p><a href="https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/integrations/safe/ISafe.sol">Git Source</a></p>
+<h2 id="functions-6"><a class="header" href="#functions-6">Functions</a></h2>
+<h3 id="exectransactionfrommodulereturndata"><a class="header" href="#exectransactionfrommodulereturndata">execTransactionFromModuleReturnData</a></h3>
+<pre><code class="language-solidity">function execTransactionFromModuleReturnData(address to, uint256 value, bytes memory data, Operation operation)
+    external
+    returns (bool success, bytes memory returnData);
+</code></pre>
+<h2 id="enums"><a class="header" href="#enums">Enums</a></h2>
+<h3 id="operation"><a class="header" href="#operation">Operation</a></h3>
+<pre><code class="language-solidity">enum Operation {
+    Call,
+    DelegateCall
+}
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="safemodule"><a class="header" href="#safemodule">SafeModule</a></h1>
+<p><a href="https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/integrations/safe/SafeModule.sol">Git Source</a></p>
+<h2 id="state-variables-6"><a class="header" href="#state-variables-6">State Variables</a></h2>
+<h3 id="safe"><a class="header" href="#safe">safe</a></h3>
+<pre><code class="language-solidity">ISafe public safe;
+</code></pre>
+<h3 id="entrypoint"><a class="header" href="#entrypoint">entryPoint</a></h3>
+<pre><code class="language-solidity">IEntryPoint immutable entryPoint;
+</code></pre>
+<h3 id="permissionverifier-3"><a class="header" href="#permissionverifier-3">permissionVerifier</a></h3>
+<pre><code class="language-solidity">PermissionVerifier immutable permissionVerifier;
+</code></pre>
+<h3 id="permissionexecutor-2"><a class="header" href="#permissionexecutor-2">permissionExecutor</a></h3>
+<pre><code class="language-solidity">PermissionExecutor immutable permissionExecutor;
+</code></pre>
+<h2 id="functions-7"><a class="header" href="#functions-7">Functions</a></h2>
+<h3 id="constructor-5"><a class="header" href="#constructor-5">constructor</a></h3>
+<pre><code class="language-solidity">constructor(IEntryPoint _entryPoint, PermissionVerifier _verifier, PermissionExecutor _executor);
+</code></pre>
+<h3 id="setsafe"><a class="header" href="#setsafe">setSafe</a></h3>
+<pre><code class="language-solidity">function setSafe(address _safe) external;
+</code></pre>
+<h3 id="validateuserop-2"><a class="header" href="#validateuserop-2">validateUserOp</a></h3>
+<pre><code class="language-solidity">function validateUserOp(UserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
+    external
+    returns (uint256 validationData);
+</code></pre>
+<h3 id="execute-2"><a class="header" href="#execute-2">execute</a></h3>
+<pre><code class="language-solidity">function execute(
+    address dest,
+    uint256 value,
+    bytes memory func,
+    Permission calldata permission,
+    bytes32[] calldata proof,
+    uint256 gasFee
+) external;
+</code></pre>
+<h3 id="executeasmodule"><a class="header" href="#executeasmodule">executeAsModule</a></h3>
+<pre><code class="language-solidity">function executeAsModule(address dest, uint256 value, bytes memory data) external;
+</code></pre>
+<h3 id="_requirefromentrypointorowner"><a class="header" href="#_requirefromentrypointorowner">_requireFromEntryPointOrOwner</a></h3>
+<pre><code class="language-solidity">function _requireFromEntryPointOrOwner() internal view;
+</code></pre>
+<h3 id="_payprefund"><a class="header" href="#_payprefund">_payPrefund</a></h3>
+<pre><code class="language-solidity">function _payPrefund(uint256 missingAccountFunds) internal;
+</code></pre>
+<h3 id="receive"><a class="header" href="#receive">receive</a></h3>
+<pre><code class="language-solidity">receive() external payable;
+</code></pre>
+<h3 id="_onlysafe"><a class="header" href="#_onlysafe">_onlySafe</a></h3>
+<pre><code class="language-solidity">function _onlySafe() internal view;
+</code></pre>
+<h2 id="events-1"><a class="header" href="#events-1">Events</a></h2>
+<h3 id="operatormutated"><a class="header" href="#operatormutated">OperatorMutated</a></h3>
+<pre><code class="language-solidity">event OperatorMutated(address indexed operator, bytes32 indexed oldPermissions, bytes32 indexed newPermissions);
+</code></pre>
+<h3 id="permissionverified"><a class="header" href="#permissionverified">PermissionVerified</a></h3>
+<pre><code class="language-solidity">event PermissionVerified(bytes32 indexed userOpHash, UserOperation userOp);
+</code></pre>
+<h3 id="permissionused"><a class="header" href="#permissionused">PermissionUsed</a></h3>
+<pre><code class="language-solidity">event PermissionUsed(
+    bytes32 indexed permHash, address dest, uint256 value, bytes func, Permission permission, uint256 gasFee
+);
+</code></pre>
+<h3 id="newsafe"><a class="header" href="#newsafe">NewSafe</a></h3>
+<pre><code class="language-solidity">event NewSafe(address safe);
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="contents-5"><a class="header" href="#contents-5">Contents</a></h1>
+<ul>
+<li><a href="src/integrations/zerodev/ZerodevValidator.sol/contract.ZerodevValidator.html">ZerodevValidator</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="zerodevvalidator"><a class="header" href="#zerodevvalidator">ZerodevValidator</a></h1>
+<p><a href="https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/integrations/zerodev/ZerodevValidator.sol">Git Source</a></p>
+<p><strong>Inherits:</strong>
+IKernelValidator</p>
+<h2 id="state-variables-7"><a class="header" href="#state-variables-7">State Variables</a></h2>
+<h3 id="permissionverifier-4"><a class="header" href="#permissionverifier-4">permissionVerifier</a></h3>
+<pre><code class="language-solidity">PermissionVerifier immutable permissionVerifier;
+</code></pre>
+<h2 id="functions-8"><a class="header" href="#functions-8">Functions</a></h2>
+<h3 id="constructor-6"><a class="header" href="#constructor-6">constructor</a></h3>
+<pre><code class="language-solidity">constructor(PermissionVerifier verifier);
+</code></pre>
+<h3 id="enable"><a class="header" href="#enable">enable</a></h3>
+<pre><code class="language-solidity">function enable(bytes calldata) external override;
+</code></pre>
+<h3 id="disable"><a class="header" href="#disable">disable</a></h3>
+<pre><code class="language-solidity">function disable(bytes calldata) external pure override;
+</code></pre>
+<h3 id="validateuserop-3"><a class="header" href="#validateuserop-3">validateUserOp</a></h3>
+<pre><code class="language-solidity">function validateUserOp(UserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
+    external
+    override
+    returns (uint256 validationData);
+</code></pre>
+<h3 id="validatesignature"><a class="header" href="#validatesignature">validateSignature</a></h3>
+<pre><code class="language-solidity">function validateSignature(bytes32 hash, bytes calldata signature) external view override returns (uint256);
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="contents-6"><a class="header" href="#contents-6">Contents</a></h1>
+<ul>
+<li><a href="src/interfaces/IDataValidator.sol/interface.IDataValidator.html">IDataValidator</a></li>
+<li><a href="src/interfaces/IPermissionExecutor.sol/interface.IPermissionExecutor.html">IPermissionExecutor</a></li>
+<li><a href="src/interfaces/IPermissionRegistry.sol/interface.IPermissionRegistry.html">IPermissionRegistry</a></li>
+<li><a href="src/interfaces/IPermissionVerifier.sol/interface.IPermissionVerifier.html">IPermissionVerifier</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="idatavalidator"><a class="header" href="#idatavalidator">IDataValidator</a></h1>
+<p><a href="https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/interfaces/IDataValidator.sol">Git Source</a></p>
+<p><strong>Author:</strong>
+Flydexo - @Flydex0</p>
+<p>This can be used for example to track the amount of granted ERC20 spent / swapped, etc...</p>
+<p><em>The DataValidator contract must respect ERC-4337 storage rules. That means the only storage accessible must have the userOp.sender as key.</em></p>
+<p><em>see https://eips.ethereum.org/EIPS/eip-4337#simulation</em></p>
+<h2 id="functions-9"><a class="header" href="#functions-9">Functions</a></h2>
+<h3 id="isvaliddata"><a class="header" href="#isvaliddata">isValidData</a></h3>
+<p>isValidData is called in the validateUserOp function of the PermissionVerifier contract</p>
+<p><em>userOp is formatted as integration agnostic, that means that if the SA (eg. Zerodev) requires a special field in the signature to determine which plugin to use, it is removed. Then the PermissionVerifier is called.</em></p>
+<pre><code class="language-solidity">function isValidData(UserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
+    external
+    returns (bool success);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>userOp</code></td><td><code>UserOperation</code></td><td>The userOp</td></tr>
+<tr><td><code>userOpHash</code></td><td><code>bytes32</code></td><td>The userOp hash</td></tr>
+<tr><td><code>missingAccountFunds</code></td><td><code>uint256</code></td><td>The funds the sender needs to pay to the EntryPoint</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>success</code></td><td><code>bool</code></td><td>Can revert to add additional logs and returns true if the userOp is considered valid</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="ipermissionexecutor"><a class="header" href="#ipermissionexecutor">IPermissionExecutor</a></h1>
+<p><a href="https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/interfaces/IPermissionExecutor.sol">Git Source</a></p>
+<p><strong>Author:</strong>
+Flydexo - @Flydex0</p>
+<p>Emits events for the Indexer</p>
+<h2 id="functions-10"><a class="header" href="#functions-10">Functions</a></h2>
+<h3 id="execute-3"><a class="header" href="#execute-3">execute</a></h3>
+<p>Execute a permissioned userOperation</p>
+<pre><code class="language-solidity">function execute(
+    address dest,
+    uint256 value,
+    bytes calldata func,
+    Permission calldata permission,
+    bytes32[] calldata proof,
+    uint256 gasFee
+) external;
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>dest</code></td><td><code>address</code></td><td>The called contract</td></tr>
+<tr><td><code>value</code></td><td><code>uint256</code></td><td>The msg.value</td></tr>
+<tr><td><code>func</code></td><td><code>bytes</code></td><td>The AllowanceCalldata used to call the contract</td></tr>
+<tr><td><code>permission</code></td><td><code>Permission</code></td><td>The permission object</td></tr>
+<tr><td><code>proof</code></td><td><code>bytes32[]</code></td><td></td></tr>
+<tr><td><code>gasFee</code></td><td><code>uint256</code></td><td>The fee for the userOperation (used to compute the Permissive fee)</td></tr>
+</tbody></table>
+</div>
+<h2 id="events-2"><a class="header" href="#events-2">Events</a></h2>
+<h3 id="permissionused-1"><a class="header" href="#permissionused-1">PermissionUsed</a></h3>
+<p>PermissionUsed - When a permissioned userOperation passed with success</p>
+<pre><code class="language-solidity">event PermissionUsed(
+    bytes32 indexed permHash, address dest, uint256 value, bytes func, Permission permission, uint256 gasFee
+);
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="ipermissionregistry"><a class="header" href="#ipermissionregistry">IPermissionRegistry</a></h1>
+<p><a href="https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/interfaces/IPermissionRegistry.sol">Git Source</a></p>
+<p><strong>Author:</strong>
+Flydexo - @Flydex0</p>
+<p>PermissionRegistry stores the permissions of an operator on an account and the remaining usages of a permission on an account.</p>
+<h2 id="functions-11"><a class="header" href="#functions-11">Functions</a></h2>
+<h3 id="operatorpermissions-1"><a class="header" href="#operatorpermissions-1">operatorPermissions</a></h3>
+<p>operatorPermissions - Getter for the granted permissions of an operator on an account</p>
+<pre><code class="language-solidity">function operatorPermissions(address sender, address operator) external view returns (bytes32 permHash);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>sender</code></td><td><code>address</code></td><td>The account address</td></tr>
+<tr><td><code>operator</code></td><td><code>address</code></td><td>The operator address</td></tr>
+</tbody></table>
+</div>
+<h3 id="remainingpermusage-1"><a class="header" href="#remainingpermusage-1">remainingPermUsage</a></h3>
+<p>remainingPermUsage - Getter for the remaining usage of a permission on an account (usage + 1)</p>
+<pre><code class="language-solidity">function remainingPermUsage(address sender, bytes32 permHash) external view returns (uint256 remainingUsage);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>sender</code></td><td><code>address</code></td><td>The account address</td></tr>
+<tr><td><code>permHash</code></td><td><code>bytes32</code></td><td>The permission hash</td></tr>
+</tbody></table>
+</div>
+<h3 id="setoperatorpermissions-1"><a class="header" href="#setoperatorpermissions-1">setOperatorPermissions</a></h3>
+<p>setOperatorPermissions - Setter for the granted permissions of an operator on an account. Can only be called by the account modifying it's own operator permissions.</p>
+<pre><code class="language-solidity">function setOperatorPermissions(address operator, bytes32 root) external;
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>operator</code></td><td><code>address</code></td><td>The operator address</td></tr>
+<tr><td><code>root</code></td><td><code>bytes32</code></td><td>The permissions merkle root</td></tr>
+</tbody></table>
+</div>
+<h3 id="setremainingpermusage-1"><a class="header" href="#setremainingpermusage-1">setRemainingPermUsage</a></h3>
+<p>setRemainingPermUsage - Setter for the remaining usage of a permission on an account. Can only be called by the account modifying it's own usage</p>
+<pre><code class="language-solidity">function setRemainingPermUsage(bytes32 permHash, uint256 remainingUsage) external;
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>permHash</code></td><td><code>bytes32</code></td><td>The permission hash</td></tr>
+<tr><td><code>remainingUsage</code></td><td><code>uint256</code></td><td>The permission remaining usage (usage + 1)</td></tr>
+</tbody></table>
+</div>
+<h2 id="events-3"><a class="header" href="#events-3">Events</a></h2>
+<h3 id="operatormutated-1"><a class="header" href="#operatormutated-1">OperatorMutated</a></h3>
+<p>OperatorMutated - Emitted when the granted permisssions for an operator on an account change</p>
+<pre><code class="language-solidity">event OperatorMutated(address indexed operator, bytes32 indexed oldPermissions, bytes32 indexed newPermissions);
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="ipermissionverifier"><a class="header" href="#ipermissionverifier">IPermissionVerifier</a></h1>
+<p><a href="https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/interfaces/IPermissionVerifier.sol">Git Source</a></p>
+<p><strong>Author:</strong>
+Flydexo - @Flydex0</p>
+<p>Contract only callable with delegatecall by the account itself or it's module or plugin</p>
+<h2 id="functions-12"><a class="header" href="#functions-12">Functions</a></h2>
+<h3 id="verify-1"><a class="header" href="#verify-1">verify</a></h3>
+<p>verify - Function that make all the Permissive related checks on the userOperation.</p>
+<p><em>For validationData specs see see https://eips.ethereum.org/EIPS/eip-4337#definitions</em></p>
+<pre><code class="language-solidity">function verify(UserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
+    external
+    returns (uint256 validationData);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>userOp</code></td><td><code>UserOperation</code></td><td>The userOperation</td></tr>
+<tr><td><code>userOpHash</code></td><td><code>bytes32</code></td><td>The userOperation hash</td></tr>
+<tr><td><code>missingAccountFunds</code></td><td><code>uint256</code></td><td>The funds the sender needs to pay to the EntryPoint</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>validationData</code></td><td><code>uint256</code></td><td>The validation data that signals are valid / invalid signature and the timespan of the permission</td></tr>
+</tbody></table>
+</div>
+<h3 id="computegasfee-1"><a class="header" href="#computegasfee-1">computeGasFee</a></h3>
+<p>computeGasFee - Function called to compute the gasFee of the userOperation depending on all the gas parameters of the operation.</p>
+<p><em>Use this function to determine the fee in the execute function</em></p>
+<pre><code class="language-solidity">function computeGasFee(UserOperation memory userOp) external pure returns (uint256 fee);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>userOp</code></td><td><code>UserOperation</code></td><td>The userOperation</td></tr>
+</tbody></table>
+</div>
+<h2 id="events-4"><a class="header" href="#events-4">Events</a></h2>
+<h3 id="permissionverified-1"><a class="header" href="#permissionverified-1">PermissionVerified</a></h3>
+<p>PermissionVerified - Emitted when a permission is successfully verified</p>
+<pre><code class="language-solidity">event PermissionVerified(bytes32 indexed userOpHash, UserOperation userOp);
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="contents-7"><a class="header" href="#contents-7">Contents</a></h1>
+<ul>
+<li><a href="src/utils/AllowanceCalldata.sol/library.AllowanceCalldata.html">AllowanceCalldata</a></li>
+<li><a href="src/utils/AllowanceCalldata.sol/constants.AllowanceCalldata.html">AllowanceCalldata constants</a></li>
+<li><a href="src/utils/Permission.sol/struct.Permission.html">Permission</a></li>
+<li><a href="src/utils/Permission.sol/library.PermissionLib.html">PermissionLib</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="allowancecalldata"><a class="header" href="#allowancecalldata">AllowanceCalldata</a></h1>
+<p><a href="https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/utils/AllowanceCalldata.sol">Git Source</a></p>
+<p><strong>Author:</strong>
+Flydexo - @Flydex0</p>
+<p>Library in charge of verifying that the calldata is valid corresponding the the allowed calldata conditions.</p>
+<h2 id="functions-13"><a class="header" href="#functions-13">Functions</a></h2>
+<h3 id="isallowedcalldata"><a class="header" href="#isallowedcalldata">isAllowedCalldata</a></h3>
+<p>isAllowedCalldata - checks the calldata is valid corresponding the the allowed calldata conditions.</p>
+<p><em>To check the msg.value field, the first arg of data must be equal to msg.value and the first arg of allowed calldata must set rules for the value</em></p>
+<pre><code class="language-solidity">function isAllowedCalldata(bytes memory allowed, bytes memory data, uint256 value) internal view returns (bool isOk);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>allowed</code></td><td><code>bytes</code></td><td>The RLP encoded Allowed calldata</td></tr>
+<tr><td><code>data</code></td><td><code>bytes</code></td><td>The RLP encodedx calldata</td></tr>
+<tr><td><code>value</code></td><td><code>uint256</code></td><td>The msg.value</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>isOk</code></td><td><code>bool</code></td><td>In case of success returns true, otherwise fails or reverts</td></tr>
+</tbody></table>
+</div>
+<h3 id="rlptoabi"><a class="header" href="#rlptoabi">RLPtoABI</a></h3>
+<p>RLPToABI - Transform the RLP encoded calldata into ABI</p>
+<p><em>the RLP calldata must already be ABI compatible when all arguments are concatenated</em></p>
+<p><em>If you have n arguments to verify (including value)</em></p>
+<p><em>You need to have n arguments in the RLP calldata</em></p>
+<p><em>And when concatenated, the arguments must be ABI compatible</em></p>
+<p><em>So if you have 1 argument to check (ignore value for the example)</em></p>
+<p><em>it must be RLP.encode([abi.encode(argument)])</em></p>
+<pre><code class="language-solidity">function RLPtoABI(bytes memory data) internal pure returns (bytes memory abiEncoded);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>data</code></td><td><code>bytes</code></td><td>the RLP encoded calldata</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>abiEncoded</code></td><td><code>bytes</code></td><td>The result ABI encoded, is valid calldata</td></tr>
+</tbody></table>
+</div>
+<h3 id="_validatearguments"><a class="header" href="#_validatearguments">_validateArguments</a></h3>
+<p>_validateArguments - Core function of the AllowanceCalldata library, checks if arguments respect the allowedArguments conditions</p>
+<p><em>isOr is used to do the minimum checks</em></p>
+<p><em>in case of AND = a single false result breaks</em></p>
+<p><em>in case of OR = a single true result breaks</em></p>
+<pre><code class="language-solidity">function _validateArguments(
+    RLPReader.RLPItem[] memory allowedArguments,
+    RLPReader.RLPItem[] memory arguments,
+    bool isOr
+) internal view returns (bool canPass);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>allowedArguments</code></td><td><code>RLPReader.RLPItem[]</code></td><td>The allowed arguments</td></tr>
+<tr><td><code>arguments</code></td><td><code>RLPReader.RLPItem[]</code></td><td>The arguments</td></tr>
+<tr><td><code>isOr</code></td><td><code>bool</code></td><td>Is the current loop in a or condition</td></tr>
+</tbody></table>
+</div>
+<h3 id="_unsafe_inc"><a class="header" href="#_unsafe_inc">_unsafe_inc</a></h3>
+<p>optimized incrementation</p>
+<pre><code class="language-solidity">function _unsafe_inc(uint256 i) private pure returns (uint256);
+</code></pre>
+<h3 id="_fillarray"><a class="header" href="#_fillarray">_fillArray</a></h3>
+<p>_fillArray - Creates a new array filled with the same item</p>
+<pre><code class="language-solidity">function _fillArray(RLPReader.RLPItem[] memory arguments, uint256 index, uint256 length)
+    internal
+    pure
+    returns (RLPReader.RLPItem[] memory newArguments);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>arguments</code></td><td><code>RLPReader.RLPItem[]</code></td><td>Array of arguments to take the item from</td></tr>
+<tr><td><code>index</code></td><td><code>uint256</code></td><td>The index of the item to fill with</td></tr>
+<tr><td><code>length</code></td><td><code>uint256</code></td><td>The length of the new filled array</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="constants-1"><a class="header" href="#constants-1">Constants</a></h1>
+<p><a href="https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/utils/AllowanceCalldata.sol">Git Source</a></p>
+<h3 id="any"><a class="header" href="#any">ANY</a></h3>
+<pre><code class="language-solidity">uint256 constant ANY = 0;
+</code></pre>
+<h3 id="ne"><a class="header" href="#ne">NE</a></h3>
+<pre><code class="language-solidity">uint256 constant NE = 1;
+</code></pre>
+<h3 id="eq"><a class="header" href="#eq">EQ</a></h3>
+<pre><code class="language-solidity">uint256 constant EQ = 2;
+</code></pre>
+<h3 id="gt"><a class="header" href="#gt">GT</a></h3>
+<pre><code class="language-solidity">uint256 constant GT = 3;
+</code></pre>
+<h3 id="lt"><a class="header" href="#lt">LT</a></h3>
+<pre><code class="language-solidity">uint256 constant LT = 4;
+</code></pre>
+<h3 id="and"><a class="header" href="#and">AND</a></h3>
+<pre><code class="language-solidity">uint256 constant AND = 5;
+</code></pre>
+<h3 id="or"><a class="header" href="#or">OR</a></h3>
+<pre><code class="language-solidity">uint256 constant OR = 6;
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="permission"><a class="header" href="#permission">Permission</a></h1>
+<p><a href="https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/utils/Permission.sol">Git Source</a></p>
+<p><strong>Author:</strong>
+Flydexo - @Flydex0</p>
+<p>A permission is made for a specific function of a specific contract</p>
+<p><em>1 operator = 1 permission set</em></p>
+<p><em>1 permission set = infinite permissions</em></p>
+<pre><code class="language-solidity">struct Permission {
+    address operator;
+    address to;
+    bytes4 selector;
+    bytes allowed_arguments;
+    address paymaster;
+    uint48 validUntil;
+    uint48 validAfter;
+    uint256 maxUsage;
+    address dataValidator;
+}
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="permissionlib"><a class="header" href="#permissionlib">PermissionLib</a></h1>
+<p><a href="https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/utils/Permission.sol">Git Source</a></p>
+<p><strong>Author:</strong>
+Flydexo - @Flydex0</p>
+<p>Library used to hash the Permission struct</p>
+<h2 id="functions-14"><a class="header" href="#functions-14">Functions</a></h2>
+<h3 id="hash"><a class="header" href="#hash">hash</a></h3>
+<pre><code class="language-solidity">function hash(Permission memory permission) internal pure returns (bytes32 permHash);
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="solidity.min.js"></script>
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+    </div>
+    </body>
+</html>
