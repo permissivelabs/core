@@ -8,14 +8,14 @@
 # Supported accounts
 
 <div align="center">
-    <img src="./docs/assets/safe.svg" width="50"/>
-    <img src="./docs/assets/zerodev.jpeg" width="50"/>
-  <img src="./docs/assets/candide.jpeg" width="50"/>
-  <img src="./docs/assets/patchwallet.jpeg" height="50"/>
-  <img src="./docs/assets//biconomy.png" height="50"/>
+    <img src="./assets/safe.svg" width="50"/>
+    <img src="./assets/zerodev.jpeg" width="50"/>
+  <img src="./assets/candide.jpeg" width="50"/>
+  <img src="./assets/patchwallet.jpeg" height="50"/>
+  <img src="./assets//biconomy.png" height="50"/>
   <h3>ERC-6900 compatible</h3>
 </div>
 
 # Future accounts supported
 
-<img src="./docs/assets/soulwallet.jpeg" height="50"/>
+<img src="./assets/soulwallet.jpeg" height="50"/>

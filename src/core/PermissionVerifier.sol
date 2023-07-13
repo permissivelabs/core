@@ -9,6 +9,7 @@ import "../interfaces/IDataValidator.sol";
 import "../interfaces/IPermissionVerifier.sol";
 // core contracts
 import "./PermissionRegistry.sol";
+import "./PermissionExecutor.sol";
 // core libraries
 import "../utils/AllowanceCalldata.sol";
 import "../utils/Permission.sol";
@@ -35,10 +36,13 @@ contract PermissionVerifier is IPermissionVerifier {
         permissionRegistry = registry;
     }
 
-    function verify(UserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
-        external
-        returns (uint256 validationData)
-    {
+    function verify(
+        UserOperation calldata userOp,
+        bytes32 userOpHash,
+        uint256 missingAccountFunds
+    ) external returns (uint256 validationData) {
+        if (bytes4(userOp.callData[0:4]) != PermissionExecutor.execute.selector)
+            revert("Invalid execute selector");
         (
             address to,
             uint256 value,
@@ -46,7 +50,10 @@ contract PermissionVerifier is IPermissionVerifier {
             Permission memory permission,
             bytes32[] memory proof,
             uint256 providedFee
-        ) = abi.decode(userOp.callData[4:], (address, uint256, bytes, Permission, bytes32[], uint256));
+        ) = abi.decode(
+                userOp.callData[4:],
+                (address, uint256, bytes, Permission, bytes32[], uint256)
+            );
         validationData = _validationData(userOp, userOpHash, permission);
         bytes32 permHash = permission.hash();
         _validateMerklePermission(permission, proof, permHash);
@@ -56,29 +63,47 @@ contract PermissionVerifier is IPermissionVerifier {
         emit PermissionVerified(userOpHash, userOp);
     }
 
-    function computeGasFee(UserOperation memory userOp) public pure returns (uint256 fee) {
-        uint256 mul = address(bytes20(userOp.paymasterAndData)) != address(0) ? 3 : 1;
-        uint256 requiredGas = userOp.callGasLimit + userOp.verificationGasLimit * mul + userOp.preVerificationGas;
+    function computeGasFee(
+        UserOperation memory userOp
+    ) public pure returns (uint256 fee) {
+        uint256 mul = address(bytes20(userOp.paymasterAndData)) != address(0)
+            ? 3
+            : 1;
+        uint256 requiredGas = userOp.callGasLimit +
+            userOp.verificationGasLimit *
+            mul +
+            userOp.preVerificationGas;
 
         fee = requiredGas * userOp.maxFeePerGas;
     }
 
-    function _validateFee(UserOperation calldata userOp, uint256 providedFee) internal pure {
+    function _validateFee(
+        UserOperation calldata userOp,
+        uint256 providedFee
+    ) internal pure {
         uint256 gasFee = computeGasFee(userOp);
         if (providedFee != gasFee) revert("Invalid provided fee");
     }
 
-    function _validationData(UserOperation calldata userOp, bytes32 userOpHash, Permission memory permission)
-        internal
-        view
-        returns (uint256 validationData)
-    {
+    function _validationData(
+        UserOperation calldata userOp,
+        bytes32 userOpHash,
+        Permission memory permission
+    ) internal view returns (uint256 validationData) {
         bytes32 hash = userOpHash.toEthSignedMessageHash();
         if (permission.operator.code.length > 0) {
-            try IERC1271(permission.operator).isValidSignature(hash, userOp.signature) returns (bytes4 magicValue) {
+            try
+                IERC1271(permission.operator).isValidSignature(
+                    hash,
+                    userOp.signature
+                )
+            returns (bytes4 magicValue) {
                 validationData = _packValidationData(
                     ValidationData({
-                        aggregator: magicValue == IERC1271.isValidSignature.selector ? address(0) : address(1),
+                        aggregator: magicValue ==
+                            IERC1271.isValidSignature.selector
+                            ? address(0)
+                            : address(1),
                         validAfter: permission.validAfter,
                         validUntil: permission.validUntil
                     })
@@ -112,8 +137,12 @@ contract PermissionVerifier is IPermissionVerifier {
         Permission memory permission
     ) internal {
         if (
-            permission.dataValidator != address(0)
-                && !IDataValidator(permission.dataValidator).isValidData(userOp, userOpHash, missingAccountFunds)
+            permission.dataValidator != address(0) &&
+            !IDataValidator(permission.dataValidator).isValidData(
+                userOp,
+                userOpHash,
+                missingAccountFunds
+            )
         ) {
             revert("Invalid data");
         }
@@ -128,7 +157,10 @@ contract PermissionVerifier is IPermissionVerifier {
         bytes32 permHash
     ) internal {
         if (permission.to != to) revert("InvalidTo");
-        uint256 rPermU = permissionRegistry.remainingPermUsage(address(this), permHash);
+        uint256 rPermU = permissionRegistry.remainingPermUsage(
+            address(this),
+            permHash
+        );
         if (permission.maxUsage > 0) {
             if (permission.maxUsage == 1) revert("OutOfPerms");
             if (rPermU == 1) {
@@ -142,7 +174,9 @@ contract PermissionVerifier is IPermissionVerifier {
         }
         if (
             !AllowanceCalldata.isAllowedCalldata(
-                permission.allowed_arguments, callData.slice(4, callData.length - 4), value
+                permission.allowed_arguments,
+                callData.slice(4, callData.length - 4),
+                value
             )
         ) revert("Not allowed Calldata");
         if (permission.selector != bytes4(callData)) revert("InvalidSelector");
@@ -152,13 +186,17 @@ contract PermissionVerifier is IPermissionVerifier {
         }
     }
 
-    function _validateMerklePermission(Permission memory permission, bytes32[] memory proof, bytes32 permHash)
-        internal
-        view
-    {
+    function _validateMerklePermission(
+        Permission memory permission,
+        bytes32[] memory proof,
+        bytes32 permHash
+    ) internal view {
         bool isValidProof = MerkleProof.verify(
             proof,
-            permissionRegistry.operatorPermissions(address(this), permission.operator),
+            permissionRegistry.operatorPermissions(
+                address(this),
+                permission.operator
+            ),
             keccak256(bytes.concat(permHash))
         );
         if (!isValidProof) revert("Invalid Proof");

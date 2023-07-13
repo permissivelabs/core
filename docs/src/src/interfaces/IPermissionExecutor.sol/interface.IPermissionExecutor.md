@@ -1,5 +1,5 @@
 # IPermissionExecutor
-[Git Source](https://github.com/permissivelabs/core/blob/fa33ef18b6b5de6eccb85fa5ba3f8e660923b0ae/src/interfaces/IPermissionExecutor.sol)
+[Git Source](https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/interfaces/IPermissionExecutor.sol)
 
 **Author:**
 Flydexo - @Flydex0

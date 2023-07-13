@@ -1,5 +1,5 @@
 # SafeModule
-[Git Source](https://github.com/permissivelabs/core/blob/fa33ef18b6b5de6eccb85fa5ba3f8e660923b0ae/src/integrations/safe/SafeModule.sol)
+[Git Source](https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/integrations/safe/SafeModule.sol)
 
 
 ## State Variables
@@ -67,6 +67,13 @@ function execute(
     bytes32[] calldata proof,
     uint256 gasFee
 ) external;
+```
+
+### executeAsModule
+
+
+```solidity
+function executeAsModule(address dest, uint256 value, bytes memory data) external;
 ```
 
 ### _requireFromEntryPointOrOwner
