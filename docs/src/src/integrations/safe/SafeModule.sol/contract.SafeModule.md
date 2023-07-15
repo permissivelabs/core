@@ -1,5 +1,5 @@
 # SafeModule
-[Git Source](https://github.com/permissivelabs/core/blob/d0719570d71b02a6308e94b636f8594e86ad2ce4/src/integrations/safe/SafeModule.sol)
+[Git Source](https://github.com/permissivelabs/core/blob/ffc718211b4e17bab264d162220cde08c464a11c/src/integrations/safe/SafeModule.sol)
 
 
 ## State Variables

@@ -8,8 +8,8 @@
 # Supported accounts
 
 <div align="center">
-    <img src="./assets/safe.svg" width="50"/>
-    <img src="./assets/zerodev.jpeg" width="50"/>
+  <img src="./assets/safe.svg" width="50"/>
+  <img src="./assets/zerodev.jpeg" width="50"/>
   <img src="./assets/candide.jpeg" width="50"/>
   <img src="./assets/patchwallet.jpeg" height="50"/>
   <img src="./assets//biconomy.png" height="50"/>
@@ -18,7 +18,7 @@
 
 # Future accounts supported
 
-<img src="./docs/assets/soulwallet.jpeg" height="50"/>
+<img src="./assets/soulwallet.jpeg" height="50"/>
 
 # Deployments
 
@@ -43,5 +43,8 @@ SafeModule: 0x84C01a3Ad6362622d88233254ED06F54B445437b
 -------------------------------------------------------------------
 6900 OperationValidator impl: 0x066811D72BA155F154C245278E1432b1BE40A55B
 6900 OperationValidator: 0x0D6d6FD586524007F09A7B3cB4a2873ED940a308
+-------------------------------------------------------------------
+Saf4337Module impl: 0xc83F407Bc8456025CE674EEE1894A709dFb92f97
+Safe4337Module: 0x389C72e17d0C885D8f80462f32A8A8a44680Bad3
 -------------------------------------------------------------------
 ```

@@ -1,5 +1,5 @@
 # PermissionVerifier
-[Git Source](https://github.com/permissivelabs/core/blob/d0719570d71b02a6308e94b636f8594e86ad2ce4/src/core/PermissionVerifier.sol)
+[Git Source](https://github.com/permissivelabs/core/blob/ffc718211b4e17bab264d162220cde08c464a11c/src/core/PermissionVerifier.sol)
 
 **Inherits:**
 [IPermissionVerifier](/src/interfaces/IPermissionVerifier.sol/interface.IPermissionVerifier.md)
