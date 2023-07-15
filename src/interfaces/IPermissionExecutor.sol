@@ -4,9 +4,9 @@ pragma solidity ^0.8.18;
 import "../utils/Permission.sol";
 
 /**
- * @title IPermissionExecutor - The core contract in change or executing the userOperation after paying the FeeManager and transforming the AllowanceCalldata to ABI
+ * @title IPermissionExecutor
  * @author Flydexo - @Flydex0
- * @notice Emits events for the Indexer
+ * @notice The core contract in change or executing the userOperation after paying the FeeManager and transforming the AllowanceCalldata to ABI
  */
 interface IPermissionExecutor {
     /**
@@ -19,7 +19,12 @@ interface IPermissionExecutor {
      * @param gasFee The fee for the userOperation (used to compute the Permissive fee)
      */
     event PermissionUsed(
-        bytes32 indexed permHash, address dest, uint256 value, bytes func, Permission permission, uint256 gasFee
+        bytes32 indexed permHash,
+        address dest,
+        uint256 value,
+        bytes func,
+        Permission permission,
+        uint256 gasFee
     );
 
     /**

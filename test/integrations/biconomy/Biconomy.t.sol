@@ -40,7 +40,12 @@ contract BiconomyTest is Test {
     event Transfer(address indexed from, address indexed to, uint256 value);
     event FeePaid(address indexed, uint256);
     event PermissionUsed(
-        bytes32 indexed permHash, address dest, uint256 value, bytes func, Permission permission, uint256 gasFee
+        bytes32 indexed permHash,
+        address dest,
+        uint256 value,
+        bytes func,
+        Permission permission,
+        uint256 gasFee
     );
 
     function setUp() public {
@@ -54,7 +59,10 @@ contract BiconomyTest is Test {
                 factory.deployAccount(
                     address(new SmartContractOwnershipRegistryModule()),
                     abi.encodeWithSelector(
-                        SmartContractOwnershipRegistryModule.initForSmartAccount.selector, address(this)
+                        SmartContractOwnershipRegistryModule
+                            .initForSmartAccount
+                            .selector,
+                        address(this)
                     )
                 )
             )
@@ -66,19 +74,6 @@ contract BiconomyTest is Test {
         permissive = new BiconomyAuthorizationModule(verifier, executor);
         vm.prank(address(bico));
         bico.enableModule(address(permissive));
-        // owners.push(address(this));
-        // safe.setup(
-        //     owners,
-        //     1,
-        //     address(0),
-        //     hex"",
-        //     address(0),
-        //     address(0),
-        //     0,
-        //     payable(address(0))
-        // );
-        // vm.prank(address(safe));
-        // safe.enableModule(address(permissive));
     }
 
     function testSwap(uint256 operatorPrivateKey) public {
@@ -96,7 +91,10 @@ contract BiconomyTest is Test {
             allowed_arguments: hex"f9013ec20200e202a00000000000000000000000000000000000000000000000000000000000000020e202a000000000000000000000000000000000000000000000000000000000000000a0e202a00000000000000000000000007fa9385be102ac3eac297483dd6233d62b3e1496e202a0000000000000000000000000000000000000000000000000003c012523e0eb80e202a00000000000000000000000000000000000000000000000000de0b6b3a7640000e202a00000000000000000000000000000000000000000000000000000000000000000e202a0000000000000000000000000000000000000000000000000000000000000002be202a09ae380f0272e2162340a5bb646c354271c0f5cfc002710c02aaa39b223fe8d0ae202a00e5c4f27ead9083c756cc2000000000000000000000000000000000000000000"
         });
         vm.prank(address(permissive));
-        registry.setOperatorPermissions(vm.addr(operatorPrivateKey), keccak256(bytes.concat(perm.hash())));
+        registry.setOperatorPermissions(
+            vm.addr(operatorPrivateKey),
+            keccak256(bytes.concat(perm.hash()))
+        );
         deal(CONIC, address(bico), 1 ether);
         vm.deal(address(permissive), 1 ether);
         vm.deal(address(bico), 1 ether);
@@ -122,7 +120,7 @@ contract BiconomyTest is Test {
                     proofs,
                     0
                 )
-                ),
+            ),
             callGasLimit: 10000000,
             verificationGasLimit: 10000000,
             preVerificationGas: 10000000,
@@ -149,19 +147,30 @@ contract BiconomyTest is Test {
                 fee
             )
         );
-        (uint8 v, bytes32 r, bytes32 s) =
-            vm.sign(operatorPrivateKey, entryPoint.getUserOpHash(op).toEthSignedMessageHash());
-        op.signature = abi.encode(abi.encodePacked(r, s, v), address(permissive));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+            operatorPrivateKey,
+            entryPoint.getUserOpHash(op).toEthSignedMessageHash()
+        );
+        op.signature = abi.encode(
+            abi.encodePacked(r, s, v),
+            address(permissive)
+        );
         ops.push(op);
-        uint256 oldBalance = ERC20(WETH).balanceOf(address(0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496));
+        uint256 oldBalance = ERC20(WETH).balanceOf(
+            address(0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496)
+        );
         entryPoint.handleOps(ops, payable(address(this)));
-        assert(ERC20(WETH).balanceOf(0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496) > oldBalance);
+        assert(
+            ERC20(WETH).balanceOf(0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496) >
+                oldBalance
+        );
     }
 
     function validPrivateKey(uint256 privateKey) internal pure {
         vm.assume(
-            privateKey < 115792089237316195423570985008687907852837564279074904382605163141518161494337
-                && privateKey != 0
+            privateKey <
+                115792089237316195423570985008687907852837564279074904382605163141518161494337 &&
+                privateKey != 0
         );
     }
 
