@@ -1,12 +1,15 @@
-# SafeModule
-[Git Source](https://github.com/permissivelabs/core/blob/d0719570d71b02a6308e94b636f8594e86ad2ce4/src/integrations/safe/SafeModule.sol)
+# Safe4337Module
+[Git Source](https://github.com/permissivelabs/core/blob/d0719570d71b02a6308e94b636f8594e86ad2ce4/src/integrations/safe/Safe4337.sol)
+
+**Inherits:**
+SafeStorage
 
 
 ## State Variables
-### safe
+### myAddress
 
 ```solidity
-ISafe public safe;
+address immutable myAddress;
 ```
 
 
@@ -31,19 +34,19 @@ PermissionExecutor immutable permissionExecutor;
 ```
 
 
+### SENTINEL_MODULES
+
+```solidity
+address internal constant SENTINEL_MODULES = address(0x1);
+```
+
+
 ## Functions
 ### constructor
 
 
 ```solidity
-constructor(IEntryPoint _entryPoint, PermissionVerifier _verifier, PermissionExecutor _executor);
-```
-
-### setSafe
-
-
-```solidity
-function setSafe(address _safe) external;
+constructor(IEntryPoint _entryPoint, PermissionVerifier verifier, PermissionExecutor executor);
 ```
 
 ### validateUserOp
@@ -69,18 +72,11 @@ function execute(
 ) external;
 ```
 
-### executeAsModule
+### enableMyself
 
 
 ```solidity
-function executeAsModule(address dest, uint256 value, bytes memory data) external;
-```
-
-### _requireFromEntryPointOrOwner
-
-
-```solidity
-function _requireFromEntryPointOrOwner() internal view;
+function enableMyself() public;
 ```
 
 ### _payPrefund

@@ -14,6 +14,7 @@
       - [BiconomyAuthorizationModule](src/integrations/biconomy/BiconomyModule.sol/contract.BiconomyAuthorizationModule.md)
     - [❱ safe](src/integrations/safe/README.md)
       - [ISafe](src/integrations/safe/ISafe.sol/interface.ISafe.md)
+      - [Safe4337Module](src/integrations/safe/Safe4337.sol/contract.Safe4337Module.md)
       - [SafeModule](src/integrations/safe/SafeModule.sol/contract.SafeModule.md)
     - [❱ zerodev](src/integrations/zerodev/README.md)
       - [ZerodevValidator](src/integrations/zerodev/ZerodevValidator.sol/contract.ZerodevValidator.md)

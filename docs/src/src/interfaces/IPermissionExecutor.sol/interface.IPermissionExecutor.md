@@ -1,10 +1,10 @@
 # IPermissionExecutor
-[Git Source](https://github.com/permissivelabs/core/blob/6a9a97fdcc83bd3f41e6b78ff8acd4353d9d4655/src/interfaces/IPermissionExecutor.sol)
+[Git Source](https://github.com/permissivelabs/core/blob/d0719570d71b02a6308e94b636f8594e86ad2ce4/src/interfaces/IPermissionExecutor.sol)
 
 **Author:**
 Flydexo - @Flydex0
 
-Emits events for the Indexer
+The core contract in change or executing the userOperation after paying the FeeManager and transforming the AllowanceCalldata to ABI
 
 
 ## Functions
