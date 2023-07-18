@@ -2,15 +2,6 @@
 
 pragma solidity ^0.8.18;
 
-struct DataValidation {
-    // address of your IValidator
-    address validator;
-    // address of the contract to call
-    address target;
-    // address of the calldata sent to the contract
-    bytes data;
-}
-
 library PermissionLib {
     struct Permission {
         // the operator
@@ -30,8 +21,8 @@ library PermissionLib {
         uint48 validAfter;
         // the max number of times + 1 this permision can be used, 0 = infinite
         uint256 maxUsage;
-        // validate on-chain data
-        DataValidation dataValidation;
+        // the address validating on-chain data
+        address dataValidator;
     }
 
     function hash(
@@ -47,9 +38,7 @@ library PermissionLib {
                 permission.validUntil,
                 permission.validAfter,
                 permission.maxUsage,
-                permission.dataValidation.validator,
-                permission.dataValidation.target,
-                permission.dataValidation.data
+                permission.dataValidator
             )
         );
     }

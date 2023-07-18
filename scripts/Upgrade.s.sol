@@ -5,10 +5,8 @@ pragma solidity ^0.8.18;
 import "forge-std/Script.sol";
 import "../src/core/PermissiveFactory.sol";
 import "../src/core/PermissiveAccount.sol";
-import "../src/core/FeeManager.sol";
-import "account-abstraction/interfaces/IEntryPoint.sol";
 
-contract DeployScript is Script {
+contract UpgradeScript is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address entrypoint = vm.envAddress("ENTRYPOINT");
@@ -19,10 +17,10 @@ contract DeployScript is Script {
             entrypoint,
             payable(address(feeManager))
         );
-        PermissiveFactory factory = new PermissiveFactory{salt: versionSalt}(
-            address(impl)
-        );
-        factory.initialize(vm.addr(deployerPrivateKey));
+        PermissiveFactory(0x03Fc43A9124813720A14889bE92eE44A73c7b3ec).upgradeTo(
+                address(impl)
+            );
+        vm.addr(deployerPrivateKey);
         vm.stopBroadcast();
     }
 }
