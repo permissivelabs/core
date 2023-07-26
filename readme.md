@@ -49,5 +49,7 @@ Safe4337Module: 0x389C72e17d0C885D8f80462f32A8A8a44680Bad3
 -------------------------------------------------------------------
 SafeProtocolManager: 0x4692af28A8a315909bEeEa6EB994EF3598Fe84dC
 SafeProtocolRegistry: 0x40dFcF5500F55Ca3c0ddEc13eD8F71F50A7Fb5F7
+SafePlugin impl: 0x9117b91567a2C264acB96757b3F3FF1FD7Da5354
+SafePlugin: 0x0A73Cb5F8A1fD5988042d57e530c151a4329b5Ed
 -------------------------------------------------------------------
 ```

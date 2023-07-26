@@ -8,8 +8,11 @@ import "account-abstraction/interfaces/INonceManager.sol";
 import "../../../utils/Permission.sol";
 import "../../../core/PermissionVerifier.sol";
 import "../../../core/PermissionExecutor.sol";
+import "bytes/BytesLib.sol";
 
 contract SafePlugin is ISafeProtocolPlugin {
+    using BytesLib for bytes;
+
     string public constant name = "Permissive";
     string public constant version = "v0.0.46";
     bool public constant requiresRootAccess = true;
@@ -17,7 +20,6 @@ contract SafePlugin is ISafeProtocolPlugin {
     address immutable permissionVerifier;
     address immutable permissionExecutor;
     address immutable safeManager;
-    address safe;
 
     constructor(
         address _entryPoint,
@@ -31,11 +33,6 @@ contract SafePlugin is ISafeProtocolPlugin {
         safeManager = _safeManager;
     }
 
-    function initialize(address _safe) external {
-        require(safe == address(0));
-        safe = _safe;
-    }
-
     function metadataProvider()
         external
         view
@@ -44,26 +41,31 @@ contract SafePlugin is ISafeProtocolPlugin {
     {}
 
     function validateUserOp(
-        UserOperation calldata userOp,
+        UserOperation memory userOp,
         bytes32 userOpHash,
         uint256 missingAccountFunds
     ) external returns (uint256 validationData) {
         _requireFromEntryPoint();
+        (address safe, UserOperation memory _userOp) = _getSafe(userOp);
         // PermissionVerifier
-        (bool success, bytes memory returnData) = permissionVerifier
-            .delegatecall(
-                abi.encodeWithSelector(
-                    PermissionVerifier.verify.selector,
-                    userOp,
-                    userOpHash,
-                    missingAccountFunds
-                )
+        bytes memory returnData = ISafeProtocolManager(safeManager)
+            .executeRootAccess(
+                ISafe(safe),
+                SafeRootAccess({
+                    action: SafeProtocolAction({
+                        to: payable(permissionVerifier),
+                        value: 0,
+                        data: abi.encodeWithSelector(
+                            PermissionVerifier.verify.selector,
+                            _userOp,
+                            userOpHash,
+                            missingAccountFunds
+                        )
+                    }),
+                    nonce: INonceManager(entryPoint).getNonce(address(this), 0),
+                    metadataHash: bytes32(0)
+                })
             );
-        if (!success) {
-            assembly {
-                revert(add(returnData, 32), mload(returnData))
-            }
-        }
         validationData = uint256(bytes32(returnData));
         _payPrefund(missingAccountFunds);
     }
@@ -71,7 +73,7 @@ contract SafePlugin is ISafeProtocolPlugin {
     function execute(
         address dest,
         uint256 value,
-        bytes memory func,
+        bytes calldata func,
         Permission calldata permission,
         // stores the proof, only used in validateUserOp
         bytes32[] calldata proof,
@@ -79,7 +81,7 @@ contract SafePlugin is ISafeProtocolPlugin {
     ) external {
         _requireFromEntryPoint();
         ISafeProtocolManager(safeManager).executeRootAccess(
-            ISafe(safe),
+            ISafe(address(uint160(bytes20(func[0:20])))),
             SafeRootAccess({
                 action: SafeProtocolAction({
                     to: payable(permissionExecutor),
@@ -88,13 +90,13 @@ contract SafePlugin is ISafeProtocolPlugin {
                         PermissionExecutor.execute.selector,
                         dest,
                         value,
-                        func,
+                        func[20:],
                         permission,
                         proof,
                         gasFee
                     )
                 }),
-                nonce: INonceManager(entryPoint).getNonce(address(this), 0),
+                nonce: INonceManager(entryPoint).getNonce(address(this), 0) + 1,
                 metadataHash: bytes32(0)
             })
         );
@@ -117,5 +119,28 @@ contract SafePlugin is ISafeProtocolPlugin {
             }("");
             (success);
         }
+    }
+
+    function _getSafe(
+        UserOperation memory userOp
+    ) internal returns (address safe, UserOperation memory) {
+        (
+            address dest,
+            uint256 value,
+            bytes memory func,
+            Permission memory perm,
+            bytes32[] memory proof,
+            uint256 gasFee
+        ) = abi.decode(
+                userOp.callData.slice(4, userOp.callData.length - 4),
+                (address, uint256, bytes, Permission, bytes32[], uint256)
+            );
+        safe = address(bytes20(func.slice(0, 20)));
+        func = func.slice(20, func.length - 20);
+        userOp.callData = bytes.concat(
+            userOp.callData.slice(0, 4),
+            abi.encode(dest, value, func, perm, proof, gasFee)
+        );
+        return (safe, userOp);
     }
 }
