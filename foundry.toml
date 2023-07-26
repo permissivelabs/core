@@ -16,5 +16,6 @@ remappings = [
     "zerodev/=lib/zerodev-wallet-kernel/src/",
     "biconomy/=lib/scw-contracts/contracts/smart-account/",
     "@account-abstraction/=lib/account-abstraction/",
+    "safe-core/=lib/safe-core-protocol/contracts/"
 ]
 seed = "0x1c6b15adc6fa0c1144b8dce3443a90c59bbd566170363d66768a038d09a06e23"

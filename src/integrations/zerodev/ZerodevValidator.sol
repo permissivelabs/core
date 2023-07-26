@@ -18,14 +18,20 @@ contract ZerodevValidator is IKernelValidator {
 
     function disable(bytes calldata) external pure override {}
 
-    function validateUserOp(UserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
-        external
-        override
-        returns (uint256 validationData)
-    {
-        (bool success, bytes memory returnData) = address(permissionVerifier).delegatecall(
-            abi.encodeWithSelector(PermissionVerifier.verify.selector, userOp, userOpHash, missingAccountFunds)
-        );
+    function validateUserOp(
+        UserOperation calldata userOp,
+        bytes32 userOpHash,
+        uint256 missingAccountFunds
+    ) external override returns (uint256 validationData) {
+        (bool success, bytes memory returnData) = address(permissionVerifier)
+            .delegatecall(
+                abi.encodeWithSelector(
+                    PermissionVerifier.verify.selector,
+                    userOp,
+                    userOpHash,
+                    missingAccountFunds
+                )
+            );
         if (!success) {
             assembly {
                 revert(add(returnData, 32), mload(returnData))
@@ -34,5 +40,8 @@ contract ZerodevValidator is IKernelValidator {
         validationData = uint256(bytes32(returnData));
     }
 
-    function validateSignature(bytes32 hash, bytes calldata signature) external view override returns (uint256) {}
+    function validateSignature(
+        bytes32 hash,
+        bytes calldata signature
+    ) external view override returns (uint256) {}
 }

@@ -13,7 +13,7 @@ contract DeployCore is Script {
         vm.startBroadcast(privateKey);
         ZerodevValidator zerodevImpl = new ZerodevValidator{salt: salt}(
             PermissionVerifier(
-                address(0x141A637e4516A7B03b6B7530d6498aC9A6986028)
+                address(0xCa97548f9C9E2f5031d569B76BF07a525e91E423)
             )
         );
         ERC1967Proxy zerodev = new ERC1967Proxy{salt: salt}(

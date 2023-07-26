@@ -20,8 +20,6 @@ import "bytes/BytesLib.sol";
 
 import "forge-std/console.sol";
 
-uint256 constant SIG_VALIDATION_FAILED = 1;
-
 /**
  * @dev see {IPermissionVerifier}
  */
@@ -118,7 +116,7 @@ contract PermissionVerifier is IPermissionVerifier {
                 );
             }
         } else if (permission.operator != hash.recover(userOp.signature)) {
-            return SIG_VALIDATION_FAILED;
+            return 1;
         } else {
             validationData = _packValidationData(
                 ValidationData({

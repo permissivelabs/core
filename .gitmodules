@@ -20,7 +20,10 @@
 [submodule "lib/zerodev-wallet-kernel"]
 	path = lib/zerodev-wallet-kernel
 	url = https://github.com/zerodevapp/zerodev-wallet-kernel
-	branch = kernel_v2
+	branch = main
 [submodule "lib/scw-contracts"]
 	path = lib/scw-contracts
 	url = https://github.com/flydexo/scw
+[submodule "lib/safe-core-protocol"]
+	path = lib/safe-core-protocol
+	url = https://github.com/5afe/safe-core-protocol
